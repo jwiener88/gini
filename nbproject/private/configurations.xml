@@ -64,6 +64,7 @@
           <in>moduledefs.h</in>
           <in>msgqueue.h</in>
           <in>mtu.h</in>
+          <in>ospf.h</in>
           <in>packetcore.h</in>
           <in>protocols.h</in>
           <in>qdisc.h</in>
@@ -74,8 +75,6 @@
           <in>vpl.h</in>
         </df>
         <df name="kernel">
-          <df name="New Folder">
-          </df>
         </df>
         <df name="src">
           <df name="gloader">
