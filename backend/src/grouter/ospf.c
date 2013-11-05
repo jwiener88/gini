@@ -58,7 +58,7 @@ int OSPFBroadcastHello(){
     uint8_t ipBuffer[MAXNODES][4]; 
     if ((count = findAllInterfaceIPs(MTU_tbl, ipBuffer)) > 0){
         //CREATE HELLO
-        _ospf_hello_msg hello = helloInit();
+        ospf_packet_t hello = helloInit();
         //LOOP Send to all interfaceIPs
         //checksum computed in for loop
         //length
@@ -66,7 +66,7 @@ int OSPFBroadcastHello(){
         for ( i = 0; i < count; i++){
             OSPFSendHello(&hello, ipBuffer[i]);
         }
-
+        
     }
     return EXIT_SUCCESS;
 }
@@ -74,27 +74,26 @@ int OSPFBroadcastHello(){
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]){
     char tmpBuff[MAX_TMPBUF_LEN];
     gpacket_t *out_pkt = (gpacket_t *) malloc(sizeof(gpacket_t));
-    if (getMyIp(hello->sourceIP) == EXIT_FAILURE) {
+    ip_packet_t *ipkt = (ip_packet_t *)(out_pkt->data.data);
+    ipkt->ip_hdr_len = 5;   // no IP header options!!
+    ospf_packet_t *opkt = (ospf_packet_t *)((uchar *)ipkt + ipkt->ip_hdr_len*4);
+    //this is the general ospf packet. 
+   // _ospf_hello_msg *hello_msg = opkt->data; //hello message points to opkt.data 
+    memcpy(opkt, hello); //copy the data from hello into this packet. 
+    
+    if (getMyIp(opkt->sourceIP) == EXIT_FAILURE) {
         return EXIT_FAILURE; //getIP failed. 
     }
-    out_pkt->data.data = hello;
-    ushort cksm = checksum(hello, hello->messageLength);
-    hello->checksum = htons(cksm);
+  
+    ushort cksm = checksum(opkt, opkt->messageLength);
+    opkt->checksum = htons(cksm);
     verbose(2, "SENDING HELLO to %s", IP2Dot(tmpBuff, ip));
-    IPOutgoingPacket(out_pkt, ip, hello->messageLength,1, OSPF_PROTOCOL);
-    
-//
-//    if (findRouteEntry(route_tbl, gNtohl(tmpBuff,ip),
-//            out_pkt->frame.nxth_ip_addr,
-//            &(out_pkt->frame.dst_interface))==EXIT_FAILURE)
-//        return EXIT_FAILURE;
-    
-    
+    IPOutgoingPacket(out_pkt, ip, opkt->messageLength,1, OSPF_PROTOCOL);
     
 }
-_ospf_hello_msg helloInit(){
+ospf_packet_t helloInit(){
     ospf_packet_t* head = malloc(sizeof(ospf_packet_t));
-    head.type = 1;    
+    head.type = HELLO;    
     _ospf_hello_msg* hello = malloc((5+ numOfNeighbours)*4);
     head->data = hello;
     int i;
@@ -102,7 +101,7 @@ _ospf_hello_msg helloInit(){
         COPY_IP(hello->neighbours[i], neighbours[i]);
     }
     head.messageLength =  numOfNeighbours + 9; //head size + hello_size = 9
-    
+    return head;
 }
 int ARPSend2Output(gpacket_t *pkt)
 {
