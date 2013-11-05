@@ -82,7 +82,7 @@ int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
     ipkt->ip_hdr_len = 5; // no IP header options!!
     ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
     //this is the general ospf packet. 
-    memcpy(opkt, hello); //copy the data from hello into this packet. 
+    memcpy(opkt, hello, hello->messageLength*4); //copy the data from hello into this packet. 
 
     if (getMyIp(opkt->sourceIP) == EXIT_FAILURE) {
         return EXIT_FAILURE;
