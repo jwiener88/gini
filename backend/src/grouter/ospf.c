@@ -63,10 +63,10 @@ void *OSPFBroadcastHello() {
         if ((count = findAllInterfaceIPs(MTU_tbl, ipBuffer)) > 0) {
             //CREATE HELLO
             ospf_packet_t *ospfMessage = helloInit();
-            _ospf_hello_msg *hello = ospfMessage.data;
+            _ospf_hello_msg *hello = ospfMessage->data;
             //LOOP Send to all interfaceIPs
             for (i = 0; i < count; i++) {
-                OSPFSendHello(&ospfMessage, ipBuffer[i]);
+                OSPFSendHello(ospfMessage, ipBuffer[i]);
             }
             sleep(hello->interval);
             
