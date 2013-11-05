@@ -112,7 +112,7 @@ ospf_packet_t helloInit() {
     for (i = 0; i < numOfNeighbours; ++i) {
         COPY_IP(hello->neighbours[i], neighbours[i]);
     }
-    head.messageLength = numOfNeighbours + 9; //head size + hello_size = 9
+    head->messageLength = numOfNeighbours + 9; //head size + hello_size = 9
     return head;
 }
 
