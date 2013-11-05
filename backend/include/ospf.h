@@ -68,7 +68,7 @@ typedef struct _ospf_LS_request {
 }_ospf_LS_request;
 
 typedef struct _ospf_LSA {
-    uint16_t lsAge = 0;
+    uint16_t lsAge;
     uint16_t lsType;
     uint32_t linkStateId;
     uint8_t advertRouterIp[4];
@@ -80,15 +80,15 @@ typedef struct _update_link{
     uint32_t linkID;
     uint32_t linkData;
     uint8_t type;
-    uint8_t pad1 = 0;
-    uint16_t pad2 = 0;
-    uint16_t pad3 = 0;
-    uint16_t metric = 1;
+    uint8_t pad1;
+    uint16_t pad2;
+    uint16_t pad3;
+    uint16_t metric;
 }LINK;
 
 typedef struct _ospf_LS_update {
     _ospf_LSA lsaHeader;
-    uint16_t padding = 0;
+    uint16_t padding;
     uint16_t numOfLinks;
     LINK links[];
 };
@@ -96,4 +96,13 @@ typedef struct _ospf_LS_update {
 typedef struct routerNode{
     uint8_t ipAddress[4];
     routerNode** children;
-}routerGraph;
+}routerNode;
+
+void OSPFinit(int *ospfHellos);
+int getMyIp(uint8_t *myIp);
+int OSPFBroadcastHello();
+int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]);
+ospf_packet_t helloInit();
+void OSPFProcess(gpacket_t *in_pkt);
+void OSPFProcessHello(gpacket_t *in_pkt);
+void OSPFProcessLSU(gpacket_t *in_pkt);

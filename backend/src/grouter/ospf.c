@@ -14,7 +14,7 @@
 
 uint8_t neighbours[MAXNODES][4];
 int numOfNeighbours;
-routerGraph routers;
+routerNode routers;
 
 void OSPFinit(int *ospfHellos) {
     int thread_stat;
