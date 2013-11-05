@@ -102,7 +102,7 @@ void OSPFinit(int *ospfHellos);
 int getMyIp(uint8_t *myIp);
 void *OSPFBroadcastHello();
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]);
-ospf_packet_t helloInit();
+ospf_packet_t* helloInit();
 void OSPFProcess(gpacket_t *in_pkt);
 void OSPFProcessHello(gpacket_t *in_pkt);
 void OSPFProcessLSU(gpacket_t *in_pkt);
