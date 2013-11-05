@@ -9,9 +9,9 @@ typedef struct _ospf_header{
     uint8_t type;
     uint16_t messageLength;
     uint8_t sourceIP[4];   //4 8-bit numbers 
-    uint32_t areaID;
+    uint32_t areaID = 0; //Edit: areadID is 0 for this project
     uint16_t checksum;
-    uint16_t authType;
+    uint16_t authType = 0; //Edit: this is 0 as well
     
     //Authentication goes here. 
 } _ospf_header;
@@ -20,7 +20,6 @@ typedef struct _ospf_header{
 #define DATABASEDesc            2
 #define LSR                     3
 #define LSU                     4
-#define LSA                     5
 
 //Linked list to handle a list of neighbours, we may want 
 // this to be just an array.
@@ -30,18 +29,18 @@ typedef struct _ospf_header{
 //    neighbour_ips* next;
 //}neighbour_ips;
 
-typedef struct _ospf_hello_head{
+typedef struct _ospf_hello_msg{
     _ospf_header header; //type should be 'HELLO' 
     uint32_t netMask = 0xFFFFFF00;
-    uint16_t interval;
-    uint8_t options;
-    uint8_t priority;
-    uint32_t routerDeadInter;
-    uint8_t desigIP[4];
-    uint8_t backupDesigIP[4];
+    uint16_t interval = 10;
+    uint8_t options ;
+    uint8_t priority = 0;
+    uint32_t routerDeadInter = 0;
+    uint8_t desigIP[4] = 0;
+    uint8_t backupDesigIP[4] = 0;
     uint8_t[4][] neighbours; //flexible array for IPs
     //when initialized, we need to calloc this struct. 
-} _ospf_hello_head;
+} _ospf_hello_msg;
 
 //Not used in this project but we have it anyways.
 typedef struct _ospf_datab_description {
@@ -53,9 +52,9 @@ typedef struct _ospf_datab_description {
     
     // Everything after here should probably be in a new struct. 
     // but we aren't using it anyways. 
-    uint16_t LSage;
-    uint8_t LSOptions;
-    uint8_t LSType;
+    uint16_t lsAge;
+    uint8_t lsOptions;
+    uint8_t lsType;
     uint32_t linkID;
     uint32_t ARIP;
     uint32_t linkSequenceNumber;
@@ -65,17 +64,18 @@ typedef struct _ospf_datab_description {
 
 typedef struct _ospf_LS_request {
     _ospf_header header;
-    uint32_t ls_type, link_id;
+    uint32_t lsType, linkId;
     uint8_t advertRouterIp[4]; 
 }_ospf_LS_request;
 
-typedef struct _ospf_LS_advert {
-    uint16_t ls_type;
-    uint32_t link_id;
+typedef struct _ospf_LSA {
+    uint16_t lsAge = 0;
+    uint16_t lsType;
+    uint32_t linkStateId;
     uint8_t advertRouterIp[4];
-    uint32_t sequenceNumber;
+    uint32_t linkSequenceNumber;
     uint16_t lsChecksum, lsLength;
-}_ospf_LS_advert;
+}_ospf_LSA;
 
 typedef struct _update_link{
     uint32_t linkID;
@@ -88,8 +88,8 @@ typedef struct _update_link{
 }LINK;
 
 typedef struct _ospf_LS_update {
-    _ospf_header ospfHeader;
-    _ospf_LS_adver LSA_header;
+    _ospf_header ospfHeader
+    _ospf_LSA lsaHeader;
     uint16_t padding = 0;
     uint16_t numOfLinks;
     LINK[] links;
