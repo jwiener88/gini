@@ -95,7 +95,7 @@ typedef struct _ospf_LS_update {
 
 typedef struct routerNode{
     uint8_t ipAddress[4];
-    routerNode** children;
+    uint8_t children[MAXNODES][4];
 }routerNode;
 
 void OSPFinit(int *ospfHellos);

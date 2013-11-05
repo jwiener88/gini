@@ -14,11 +14,12 @@
 
 uint8_t neighbours[MAXNODES][4];
 int numOfNeighbours;
-routerNode routers;
+routerNode router;
+
 
 void OSPFinit(int *ospfHellos) {
     int thread_stat;
-    getMyIp(routers->ipAddress);
+    getMyIp(router.ipAddress);
     numOfNeighbours = 0;
     thread_stat = pthread_create((pthread_t *)ospfHellos, NULL, OSPFBroadcastHello, NULL);
 }
@@ -55,7 +56,7 @@ extern pktcore_t *pcore;
  * Sends a hello packet to all routers in the interface.  
  * @return Success or Failure. 
  */
-int OSPFBroadcastHello() {
+void *OSPFBroadcastHello() {
     int count, i, j;
     uint8_t ipBuffer[MAXNODES][4];
     while(1){
@@ -71,8 +72,6 @@ int OSPFBroadcastHello() {
             
         }
     }
-    
-    return EXIT_SUCCESS;
 }
 
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
@@ -88,8 +87,8 @@ int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
         return EXIT_FAILURE;
     }
 
-    ushort cksm = checksum(opkt, opkt->messageLength);
-    opkt->checksum = htons(cksm);
+    //ushort cksm = checksum(opkt, opkt->messageLength);
+    //opkt->checksum = htons(cksm);
     verbose(2, "SENDING HELLO to %s", IP2Dot(tmpBuff, ip));
     IPOutgoingPacket(out_pkt, ip, opkt->messageLength, 1, OSPF_PROTOCOL);
 
@@ -170,7 +169,7 @@ void OSPFProcessHello(gpacket_t *in_pkt){
         }
     }
     if(!isKnownNeighbour){
-        memcpy(neighbours[numOfNeighbours++], source); 
+        memcpy(neighbours[numOfNeighbours++], source, ); 
     }
 }
 
