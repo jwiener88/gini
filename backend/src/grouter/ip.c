@@ -308,14 +308,20 @@ int IPProcessMyPacket(gpacket_t *in_pkt)
 		if (ip_pkt->ip_prot == ICMP_PROTOCOL) {
 			ICMPProcessPacket(in_pkt);
 		  return EXIT_SUCCESS;
-    }
-
+                }
+                // Is packet OSPF? send to OSPF module.	
+		if (ip_pkt->ip_prot == OSPF_PROTOCOL){
+			OSPFProcess(in_pkt);
+		  return EXIT_SUCCESS;
+                }
+                
 		// Is packet UDP/TCP (only UDP implemented now)
 		// May be we can deal with other connectionless protocols as well.
 		if (ip_pkt->ip_prot == UDP_PROTOCOL){
 			UDPProcess(in_pkt);
 		  return EXIT_SUCCESS;
-    }
+                }
+                
 
 	}
 	return EXIT_FAILURE;
