@@ -91,6 +91,7 @@ typedef struct _router_config
 	pthread_t scheduler;
 	pthread_t worker;
 	int schedcycle;
+        pthread_t ospf_hellos;
 } router_config;
 
 

@@ -16,9 +16,11 @@ uint8_t neighbours[MAXNODES][4];
 int numOfNeighbours;
 routerGraph routers;
 
-void OSPFinit() {
+void OSPFinit(int *ospfHellos) {
+    int thread_stat;
     getMyIp(routers->ipAddress);
     numOfNeighbours = 0;
+    thread_stat = pthread_create((pthread_t *)ospfHellos, NULL, OSPFBroadcastHello, NULL);
 }
 
 int getMyIp(uint8_t *myIp) {
@@ -56,18 +58,20 @@ extern pktcore_t *pcore;
 int OSPFBroadcastHello() {
     int count, i, j;
     uint8_t ipBuffer[MAXNODES][4];
-    if ((count = findAllInterfaceIPs(MTU_tbl, ipBuffer)) > 0) {
-        //CREATE HELLO
-        ospf_packet_t hello = helloInit();
-        //LOOP Send to all interfaceIPs
-        //checksum computed in for loop
-        //length
-        //source IP.
-        for (i = 0; i < count; i++) {
-            OSPFSendHello(&hello, ipBuffer[i]);
+    while(1){
+        if ((count = findAllInterfaceIPs(MTU_tbl, ipBuffer)) > 0) {
+            //CREATE HELLO
+            ospf_packet_t ospfMessage = helloInit();
+            _ospf_hello_msg *hello = ospfMessage.data;
+            //LOOP Send to all interfaceIPs
+            for (i = 0; i < count; i++) {
+                OSPFSendHello(&ospfMessage, ipBuffer[i]);
+            }
+            sleep(hello->interval);
+            
         }
-
     }
+    
     return EXIT_SUCCESS;
 }
 
