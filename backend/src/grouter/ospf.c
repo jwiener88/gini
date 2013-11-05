@@ -94,7 +94,7 @@ int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
 
 }
 
-ospf_packet_t helloInit() {
+ospf_packet_t* helloInit() {
     ospf_packet_t* head = malloc(sizeof (ospf_packet_t));
     head->type = HELLO;
     _ospf_hello_msg* hello = malloc((5 + numOfNeighbours)*4);
@@ -113,7 +113,7 @@ ospf_packet_t helloInit() {
         COPY_IP(hello->neighbours[i], neighbours[i]);
     }
     head->messageLength = numOfNeighbours + 9; //head size + hello_size = 9
-    return &head;
+    return head;
 }
 
 /*
