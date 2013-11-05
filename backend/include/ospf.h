@@ -36,7 +36,7 @@ typedef struct _ospf_hello_msg{
     uint16_t interval = 10;
     uint8_t options=0;
     uint8_t priority = 0;
-    uint32_t routerDeadInter = 0;
+    uint32_t routerDeadInter = 40;
     uint8_t desigIP[4] = 0;
     uint8_t backupDesigIP[4] = 0;
     uint8_t neighbours[][4]; //flexible array for IPs

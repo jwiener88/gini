@@ -53,7 +53,7 @@ extern pktcore_t *pcore;
  * @return Success or Failure. 
  */
 int OSPFBroadcastHello(){
-    int count;
+    int count, i, j;
     uint8_t ipBuffer[MAXNODES][4]; 
     if ((count = findAllInterfaceIPs(MTU_tbl, ipBuffer)) > 0){
         //CREATE HELLO
@@ -62,15 +62,22 @@ int OSPFBroadcastHello(){
         //checksum computed in for loop
         //length
         //source IP.
+        for ( i = 0; i < count; i++){
+            OSPFSendHello(&hello, ipBuffer[i]);
+        }
 
     }
     return EXIT_SUCCESS;
 }
 
+int OSPFSendHello(_ospf_hello_msg* hello, uint8_t ip[]){
+    //send here. 
+}
 _ospf_hello_msg helloInit(){
-    _ospf_header head = malloc(sizeof(_ospf_header));
+    _ospf_header* head = malloc(sizeof(_ospf_header));
     head.type = 1;    
-    _ospf_hello_msg hello = calloc(sizeof(_ospf_hello_msg), numOfNeighbours);    
+    _ospf_hello_msg* hello 
+            = (_ospf_hello_msg)* (head + 4); //TODO: make hello allocation   
     head.messageLength =  numOfNeighbours + 9; //head size + hello_size = 9
     
 }
