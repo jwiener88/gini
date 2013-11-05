@@ -8,9 +8,10 @@
 #include "grouter.h"
 #include "packetcore.h"
 #include "ospf.h"
+#include "gnet.c"
 
 
-uint8_t neighbours[4][MAXNODES];
+uint8_t neighbours[MAXNODES][4];
 int numOfNeighbours;
 routerGraph routers; 
 
@@ -70,14 +71,36 @@ int OSPFBroadcastHello(){
     return EXIT_SUCCESS;
 }
 
-int OSPFSendHello(_ospf_hello_msg* hello, uint8_t ip[]){
-    //send here. 
+int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]){
+    char tmpBuff[MAX_TMPBUF_LEN];
+    gpacket_t *out_pkt = (gpacket_t *) malloc(sizeof(gpacket_t));
+    if (getMyIp(hello->sourceIP) == EXIT_FAILURE) {
+        return EXIT_FAILURE; //getIP failed. 
+    }
+    out_pkt->data.data = hello;
+    ushort cksm = checksum(hello, hello->messageLength);
+    hello->checksum = htons(cksm);
+    verbose(2, "SENDING HELLO to %s", IP2Dot(tmpBuff, ip));
+    IPOutgoingPacket(out_pkt, ip, hello->messageLength,1, OSPF_PROTOCOL);
+    
+//
+//    if (findRouteEntry(route_tbl, gNtohl(tmpBuff,ip),
+//            out_pkt->frame.nxth_ip_addr,
+//            &(out_pkt->frame.dst_interface))==EXIT_FAILURE)
+//        return EXIT_FAILURE;
+    
+    
+    
 }
 _ospf_hello_msg helloInit(){
-    _ospf_header* head = malloc(sizeof(_ospf_header));
+    ospf_packet_t* head = malloc(sizeof(ospf_packet_t));
     head.type = 1;    
-    _ospf_hello_msg* hello 
-            = (_ospf_hello_msg)* (head + 4); //TODO: make hello allocation   
+    _ospf_hello_msg* hello = malloc((5+ numOfNeighbours)*4);
+    head->data = hello;
+    int i;
+    for(i = 0; i < numOfNeighbours; ++i){
+        COPY_IP(hello->neighbours[i], neighbours[i]);
+    }
     head.messageLength =  numOfNeighbours + 9; //head size + hello_size = 9
     
 }
