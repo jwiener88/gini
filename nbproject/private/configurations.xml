@@ -75,6 +75,8 @@
           <in>vpl.h</in>
         </df>
         <df name="kernel">
+          <df name="New Folder">
+          </df>
         </df>
         <df name="src">
           <df name="gloader">

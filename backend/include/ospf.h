@@ -7,16 +7,16 @@
 #define MAXNODES 50
 #define MAXSIZE 300
 //All of this may need to move to the header. 
-typedef struct _ospf_header{
+typedef struct ospf_packet_t{
     uint8_t version = 2;
     uint8_t type;
-    uint16_t messageLength;
+    uint16_t messageLength; //in words (4byts/word)
     uint8_t sourceIP[4];   //4 8-bit numbers 
     uint32_t areaID = 0; //Edit: areadID is 0 for this project
     uint16_t checksum;
     uint16_t authType = 0; //Edit: this is 0 as well
-    uint8_t data[DEFAULT_MTU-16]; 
-} _ospf_header;
+    uint8_t data[DEFAULT_MTU-16-20]; //minus this header, minus ip header. 
+} ospf_packet_t;
 
 #define HELLO                   1
 #define DATABASEDesc            2

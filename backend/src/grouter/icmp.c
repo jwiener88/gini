@@ -105,7 +105,6 @@ void ICMPSendPingPacket(uchar *dst_ip, int size, int seq)
 	uchar *dataptr;
 	int i;
 	char tmpbuf[64];
-
 	pstat.ntransmitted++;
 
 	icmphdr->type = ICMP_ECHO_REQUEST;
