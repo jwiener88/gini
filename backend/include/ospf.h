@@ -8,13 +8,13 @@
 #define MAXSIZE 300
 //All of this may need to move to the header. 
 typedef struct ospf_packet_t{
-    uint8_t version = 2;
+    uint8_t version;
     uint8_t type;
     uint16_t messageLength; //in words (4byts/word)
     uint8_t sourceIP[4];   //4 8-bit numbers 
-    uint32_t areaID = 0; //Edit: areadID is 0 for this project
+    uint32_t areaID; // areadID is 0 for this project
     uint16_t checksum;
-    uint16_t authType = 0; //Edit: this is 0 as well
+    uint16_t authType; //Edit: this is 0 as well
     uint8_t data[DEFAULT_MTU-16-20]; //minus this header, minus ip header. 
 } ospf_packet_t;
 
@@ -32,13 +32,13 @@ typedef struct ospf_packet_t{
 //}neighbour_ips;
 
 typedef struct _ospf_hello_msg{
-    uint32_t netMask = 0xFFFFFF00;
-    uint16_t interval = 10;
-    uint8_t options=0;
-    uint8_t priority = 0;
-    uint32_t routerDeadInter = 40;
-    uint8_t desigIP[4] = 0;
-    uint8_t backupDesigIP[4] = 0;
+    uint32_t netMask;
+    uint16_t interval;
+    uint8_t options;
+    uint8_t priority;
+    uint32_t routerDeadInter;
+    uint8_t desigIP[4];
+    uint8_t backupDesigIP[4];
     uint8_t neighbours[][4]; //flexible array for IPs
     //when initialized, we need to calloc this struct. 
 } _ospf_hello_msg;
