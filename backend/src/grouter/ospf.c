@@ -45,7 +45,7 @@ int getMyIp(uint8_t *myIp) {
             }
         }
     } else return EXIT_FAILURE;
-    COPY_IP(myIP, minm);
+    COPY_IP(myIp, minm);
 
     return EXIT_SUCCESS;
 }
@@ -96,7 +96,7 @@ int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
 
 ospf_packet_t helloInit() {
     ospf_packet_t* head = malloc(sizeof (ospf_packet_t));
-    head.type = HELLO;
+    head->type = HELLO;
     _ospf_hello_msg* hello = malloc((5 + numOfNeighbours)*4);
     head->data = hello;
     head->version = 2;
@@ -169,7 +169,7 @@ void OSPFProcessHello(gpacket_t *in_pkt){
         }
     }
     if(!isKnownNeighbour){
-        memcpy(neighbours[numOfNeighbours++], source, ); 
+        memcpy(neighbours[numOfNeighbours], source, numOfNeighbours*4); 
     }
 }
 
