@@ -10,11 +10,14 @@
 #include "packetcore.h"
 #include "ospf.h"
 #include "gnet.c"
+#include "mtu.h"
 
 
 uint8_t neighbours[MAXNODES][4];
 int numOfNeighbours;
 routerNode router;
+extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
+
 
 
 void OSPFinit(int *ospfHellos) {
@@ -76,6 +79,7 @@ void *OSPFBroadcastHello() {
 
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
     char tmpBuff[MAX_TMPBUF_LEN];
+    
     gpacket_t *out_pkt = (gpacket_t *) malloc(sizeof (gpacket_t));
     ip_packet_t *ipkt = (ip_packet_t *) (out_pkt->data.data);
     ipkt->ip_hdr_len = 5; // no IP header options!!
@@ -95,10 +99,9 @@ int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
 }
 
 ospf_packet_t* helloInit() {
-    ospf_packet_t* head = malloc(sizeof (ospf_packet_t));
+    ospf_packet_t *head = malloc(sizeof (ospf_packet_t));
     head->type = HELLO;
-    _ospf_hello_msg* hello = malloc((5 + numOfNeighbours)*4);
-    head->data =(uint8_t*) hello;
+    _ospf_hello_msg *hello =(_ospf_hello_msg *)((uchar *)head + 4*4);
     head->version = 2;
     head->areaID = 0;
     head->authType= 0;
