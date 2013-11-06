@@ -18,8 +18,8 @@
 #include <netinet/in.h>
 #include <string.h>
 
-extern route_entry_t route_tbl[MAX_ROUTES];       	// routing table
-extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
+route_entry_t route_tbl[MAX_ROUTES];       	// routing table
+mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
 
 extern pktcore_t *pcore;
 

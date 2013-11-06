@@ -75,8 +75,6 @@
           <in>vpl.h</in>
         </df>
         <df name="kernel">
-          <df name="New Folder">
-          </df>
         </df>
         <df name="src">
           <df name="gloader">
@@ -210,6 +208,26 @@
           </df>
         </df>
       </df>
+      <df name="bin">
+      </df>
+      <df name="build">
+        <df name="release">
+          <df name="grouter">
+          </df>
+          <df name="uswitch">
+          </df>
+          <df name="vgini">
+            <df name="local">
+            </df>
+            <df name="remote">
+            </df>
+          </df>
+          <df name="wgini">
+          </df>
+        </df>
+      </df>
+      <df name="doc">
+      </df>
       <df name="frontend">
         <df name="bin">
         </df>
@@ -227,6 +245,38 @@
             </df>
             <df name="UI">
             </df>
+          </df>
+        </df>
+      </df>
+      <df name="lib">
+        <df name="gini">
+          <df name="gbuilder">
+            <df name="Core">
+            </df>
+            <df name="Devices">
+            </df>
+            <df name="Network">
+            </df>
+            <df name="UI">
+            </df>
+          </df>
+          <df name="gloader">
+          </df>
+          <df name="grouter">
+          </df>
+          <df name="kernel">
+          </df>
+          <df name="uswitch">
+          </df>
+          <df name="vgini">
+          </df>
+          <df name="wgini">
+          </df>
+        </df>
+      </df>
+      <df name="share">
+        <df name="gini">
+          <df name="filesystem">
           </df>
         </df>
       </df>

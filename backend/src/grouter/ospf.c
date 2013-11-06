@@ -9,8 +9,9 @@
 #include "grouter.h"
 #include "packetcore.h"
 #include "ospf.h"
-#include "gnet.c"
+#include "gnet.h"
 #include "mtu.h"
+#include "ip.h"
 
 
 uint8_t neighbours[MAXNODES][4];
@@ -80,8 +81,8 @@ void *OSPFBroadcastHello() {
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
     char tmpBuff[MAX_TMPBUF_LEN];
     
-    gpacket_t *out_pkt = (gpacket_t *) malloc(sizeof (gpacket_t));
-    ip_packet_t *ipkt = (ip_packet_t *) (out_pkt->data.data);
+    gpacket_t *out_pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
+    ip_packet_t *ipkt = (ip_packet_t*) (out_pkt->data.data);
     ipkt->ip_hdr_len = 5; // no IP header options!!
     ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
     //this is the general ospf packet. 

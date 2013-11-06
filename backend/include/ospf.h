@@ -91,7 +91,7 @@ typedef struct _ospf_LS_update {
     uint16_t padding;
     uint16_t numOfLinks;
     LINK links[];
-};
+}ospf_LSU;
 
 typedef struct routerNode{
     uint8_t ipAddress[4];
