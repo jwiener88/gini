@@ -24,9 +24,8 @@ extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
 void OSPFinit() {
     printf("Inside OSPF\n");
     int thread_stat;
-    if( getMyIp(router.ipAddress) == EXIT_FAILURE ) return;
+    //if( getMyIp(router.ipAddress) == EXIT_FAILURE ) return;
     numOfNeighbours = 0;
-    int *ospfHellos = 0;
     pthread_t threadid;
     thread_stat = pthread_create(&(threadid), NULL, (void *)OSPFBroadcastHello, (void *)NULL);
 }
@@ -64,25 +63,42 @@ extern interface_array_t netarray;
  * @return Success or Failure. 
  */
 void *OSPFBroadcastHello() {
-    int count, i, j;
+    int count = 0, i, j;
     char tmpbuf[MAX_TMPBUF_LEN];
     printf("In OSPFBroad.\n");
     while(1){
         interface_t *currIface = netarray.elem;
         ospf_packet_t *ospfMessage = helloInit();
         _ospf_hello_msg *hello = ospfMessage->data;
-        //printf("NetarrayCount %d\n", netarray.count);
+        printf("\nNEIGHBOURS DISOVERED SO FAR: %d\n", numOfNeighbours);
+        for( i = 0; i < numOfNeighbours; i++ ){
+            printf("%d.%d.%d.%d\n", neighbours[i][3], neighbours[i][2], neighbours[i][1], neighbours[i][0]);
+        }
+        printf("\nBROADCAST ROUND: %d, Number of interfaces: %d\n", ++count, netarray.count);
         interface_t *ifptr;
         for( i = 0; i < netarray.count; i++ ){
             ifptr = netarray.elem[i];
-            if( ifptr == NULL ) continue;
+            if( ifptr == NULL ){ 
+                printf("NULL Interface Found\n");
+                continue;
+            }
             //currIface += sizeof(netarray->elem);
             OSPFSendHello(ospfMessage, ifptr->ip_addr);
             //printf("IfPTR value %s.\n", IP2Dot(tmpbuf, ifptr->ip_addr));
         }
+        printf("\n");
         sleep(hello->interval);
+        
     }
 }
+
+/*void OSPFAlive(){
+    sleep(40);
+    int i;
+    for( i = 0; i < numOfNeighbours; i++ ){
+        
+    }
+}*/
 
 int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip) {
     char tmpBuff[MAX_TMPBUF_LEN];
@@ -95,6 +111,7 @@ int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip) {
     //this is the general ospf packet. 
     memcpy(opkt, hello, hello->messageLength*4); //copy the data from hello into this packet. 
     //uncomment out this later
+    COPY_IP(opkt->sourceIP, dst_ip);
 //    if (getMyIp(opkt->sourceIP) == EXIT_FAILURE) {
 //        return EXIT_FAILURE;
 //    }
@@ -103,8 +120,8 @@ int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip) {
     //opkt->checksum = htons(cksm);
     //verbose(2, "SENDING HELLO to %s", IP2Dot(tmpBuff, ip));
 	//char tmpbuf[MAX_TMPBUF_LEN];
-    printf("Sending to interface %s\n",IP2Dot(tmpBuff,dst_ip) );
-    printf("OSPF.c OSPF Type:%d\n", opkt->type);
+    printf("SENDING TO interface %s\n",IP2Dot(tmpBuff,dst_ip) );
+    //printf("OSPF.c OSPF Type:%d\n", opkt->type);
     IPOutgoingPacket(out_pkt, dst_ip, opkt->messageLength, 2, OSPF_PROTOCOL);
 
 }
@@ -147,12 +164,10 @@ void OSPFProcess(gpacket_t *in_pkt) {
 
     switch (ospf_hdr->type) {
         case HELLO:
-            verbose(2, "[ICMPProcessPacket]:: ICMP processing for ECHO request");
             OSPFProcessHello(in_pkt); //TODO: implemnt this function.
             break;
 
         case DATABASEDesc:
-            verbose(2, "[ICMPProcessPacket]:: ICMP processing for ECHO reply");
             //UNIMPLEMENTED
             break;
 
@@ -168,25 +183,30 @@ void OSPFProcess(gpacket_t *in_pkt) {
 }
 
 void OSPFProcessHello(gpacket_t *in_pkt){
-    printf("RECEIVED Something.\n");
+    printf("RECEIVED at OSPF ProcessHello.\n");
     ip_packet_t *ipkt = (ip_packet_t *)in_pkt->data.data;
     int iphdrlen = ipkt->ip_hdr_len *4;
     ospf_packet_t *ospfhdr = (ospf_packet_t *)((uchar *)ipkt + iphdrlen);
     _ospf_hello_msg *hellomsg = ospfhdr->data;
-    int isKnownNeighbour = 0;
-    int i;
     uint8_t source[4];
+    char tmpbuf[MAX_TMPBUF_LEN];
     COPY_IP(source, ospfhdr->sourceIP);
-    for( i = 0; i < numOfNeighbours; ++i){
-        // compare ospfhdr->sourceIP to all neighbours;
-        if (COMPARE_IP(source, neighbours[i]) == 0){
-        //the source is known as my neighbour. 
-            isKnownNeighbour = 1;
-            break;
-        }
+    if( numOfNeighbours == 0 ){
+        memcpy(neighbours[numOfNeighbours++], source, 4);
     }
-    if(!isKnownNeighbour){
-        memcpy(neighbours[numOfNeighbours], source, numOfNeighbours*4); 
+    else{
+        int i, isKnownNeighbour = 0;
+        for( i = 0; i < numOfNeighbours; ++i){
+            // compare ospfhdr->sourceIP to all neighbours;
+            if (COMPARE_IP(source, neighbours[i]) == 0){
+            //the source is known as my neighbour. 
+                isKnownNeighbour = 1;
+                break;
+            }
+        }
+        if(isKnownNeighbour == 0){
+            memcpy(neighbours[numOfNeighbours++], source, 4);
+        }
     }
 }
 

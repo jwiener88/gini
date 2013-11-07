@@ -347,21 +347,21 @@ void *packetProcessor(void *pc)
 		verbose(2, "[packetProcessor]:: Waiting for a packet...");
 		readQueue(pcore->workQ, (void **)&in_pkt, &pktsize);
 		pthread_testcancel();
-		verbose(1, "[packetProcessor]:: Got a packet for further processing..");
+		verbose(2, "[packetProcessor]:: Got a packet for further processing..");
 
 		// get the protocol field within the packet... and switch it accordingly
 		switch (ntohs(in_pkt->data.header.prot))
 		{
 		case IP_PROTOCOL:
-			verbose(1, "[packetProcessor]:: Packet sent to IP routine for further processing.. ");
+			verbose(2, "[packetProcessor]:: Packet sent to IP routine for further processing.. ");
                         IPIncomingPacket(in_pkt);
 			break;
 		case ARP_PROTOCOL:
-			verbose(1, "[packetProcessor]:: Packet sent to ARP module for further processing.. ");
+			verbose(2, "[packetProcessor]:: Packet sent to ARP module for further processing.. ");
 			ARPProcess(in_pkt);
 			break;
                 default:
-			verbose(1, "[packetProcessor]:: Packet discarded: Unknown protocol protocol");
+			verbose(2, "[packetProcessor]:: Packet discarded: Unknown protocol protocol");
 			// TODO: should we generate ICMP errors here.. check router RFCs
 			break;
 		}
@@ -460,7 +460,9 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
 		pthread_cond_signal(&(pcore->schwaiting)); // wake up scheduler if it was waiting..
 	pthread_mutex_unlock(&(pcore->qlock));
 	verbose(2, "[enqueuePacket]:: Adding packet.. ");
-	if( writeQueue(thisq, in_pkt, pktsize) == EXIT_SUCCESS ) printf("SUCCESSFULLY Written to Queue.\n");
+	if( writeQueue(thisq, in_pkt, pktsize) == EXIT_SUCCESS ){
+            //Printf("SUCCESSFULLY Written to Queue.\n");
+        }
 	return EXIT_SUCCESS;
 }
 

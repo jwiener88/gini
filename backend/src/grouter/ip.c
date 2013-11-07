@@ -40,7 +40,7 @@ void IPInit()
  */
 void IPIncomingPacket(gpacket_t *in_pkt)
 {
-        printf("RECEIVED Something in IPINCOMINGPACKET.\n");    
+        //printf("RECEIVED Something in IPINCOMINGPACKET.\n");    
 	char tmpbuf[MAX_TMPBUF_LEN];
 	// get a pointer to the IP packet
         ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
@@ -48,7 +48,10 @@ void IPIncomingPacket(gpacket_t *in_pkt)
         // Is this IP packet for me??
         //ospf_packet_t *ospfpt = (uchar *)(ip_pkt + ntohs(ip_pkt->ip_pkt_len));
         //printf("IP.c at Receiving end OSPF Type: %d\n", ospfpt->type);
-        printf("Protocol of received IP packet: %d\n", ip_pkt->ip_prot);
+        //printf("Protocol of received IP packet: %d\n", ip_pkt->ip_prot);
+        printf("IPINCOMING Received from: %s\n", IP2Dot(tmpbuf, gNtohl(tmpbuf, ip_pkt->ip_src)));
+        printf("IPINCOMING Was addressed to: %s\n", IP2Dot(tmpbuf, gNtohl(tmpbuf, ip_pkt->ip_dst)));
+        
 	if (IPCheckPacket4Me(in_pkt))
 	{
 		verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");
@@ -78,6 +81,7 @@ int IPCheckPacket4Me(gpacket_t *in_pkt)
 {
         //printf("RECEIVED Something in IPCHECKPACKET.\n");    
 	ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
+        if( ip_pkt->ip_prot == OSPF_PROTOCOL ) return TRUE;
 	char tmpbuf[MAX_TMPBUF_LEN];
 	int count, i;
 	uchar iface_ip[MAX_MTU][4];
@@ -422,19 +426,21 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 		// find the nexthop and interface and fill them in the "meta" frame
 		// NOTE: the packet itself is not modified by this lookup!
 		if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst),
-				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE)
-				   return EXIT_FAILURE;
+				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE){
+				   //return EXIT_FAILURE;
+                }
 
 		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
 		// lookup the IP address of the destination interface..
 		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
-					      iface_ip_addr)) == EXIT_FAILURE)
-					      return EXIT_FAILURE;
+					      iface_ip_addr)) == EXIT_FAILURE){
+					      //return EXIT_FAILURE;
+                }
 		// the outgoing packet should have the interface IP as source
 		COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, iface_ip_addr));
 		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
-                dst_ip[0] = 255;
-                //COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
+                //dst_ip[0] = 255;
+                COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
                 //printf("All is well.\n");
                 //ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *) ip_pkt + 20);
                 //ospf_packet_t *ospfpt = (uchar *)(ip_pkt + ntohs(ip_pkt->ip_pkt_len));
@@ -453,6 +459,7 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
         //to avoid the if clauses in gnet
         pkt->frame.arp_valid = FALSE;
         pkt->frame.arp_bcast = TRUE;
+        //printf("IPOUTGOING Prot:%d\n",ip_pkt->ip_prot);
 	IPSend2Output(pkt);
 	verbose(2, "[IPOutgoingPacket]:: IP packet sent to output queue.. ");
 	return EXIT_SUCCESS;

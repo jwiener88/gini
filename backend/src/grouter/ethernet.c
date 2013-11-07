@@ -129,7 +129,8 @@ void* fromEthernetDev(void *arg)
                         }
                     }
                     else{
-                        verbose(1, "[fromEthernetDev]:: Packet dropped .. not for this router!? ");
+                        verbose(1, "[fromEthernetDev]:: SPacket dropped .. not for this router!? ");
+                        printf("Dropped protocol: %d\n", ip_pkt2->ip_prot);
                         free(in_pkt);
                         continue;
                     }
@@ -151,7 +152,7 @@ void* fromEthernetDev(void *arg)
 		verbose(2, "[fromEthernetDev]:: Packet is sent for enqueuing..");
                 //printf("Sent for enqueuing\n");
 		//if( enqueuePacket(pcore, in_pkt, sizeof(gpacket_t)) == EXIT_SUCCESS ) printf("SUCCESSFULLY Enqueued.\n");
-                printf("Received Hello at ethernet.c\n");
+                //printf("Received Hello at ethernet.c\n");
                 enqueuePacket(pcore, in_pkt, sizeof(gpacket_t));
 	}
 }
