@@ -71,8 +71,9 @@ int CLIInit(pthread_t *val)
 void *CLIProcessCmdsInteractive(void *arg)
 {
 	FILE *fp = (FILE *)arg;
-
+        //printf("ALIVELIVILEIVE");
 	CLIPrintHelpPreamble();
+        //OSPFinit();
 	CLIProcessCmds(fp, 1);
 }
 

@@ -341,7 +341,7 @@ int vpl_recvfrom(vpl_data_t *vpl, void *buf, int len)
 
 int vpl_sendto(vpl_data_t *vpl, void *buf, int len)
 {
-	struct sockaddr_un *data_addr = vpl->data_addr;
+    	struct sockaddr_un *data_addr = vpl->data_addr;
 
 	copy2Queue(consoleq, buf, len);
 	return(__vpl_sendto(vpl->data, buf, len, data_addr, sizeof(*data_addr)));

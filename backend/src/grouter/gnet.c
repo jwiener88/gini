@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 #include "routetable.h"
+#include "ospf.h"
 
 extern route_entry_t route_tbl[MAX_ROUTES];
 
@@ -786,7 +787,14 @@ void *GNETHandler(void *outq)
 				continue;
 			}
 		}
-
+                ip_packet_t *ip_pkt2 = (ip_packet_t *)in_pkt->data.data;
+                if( ip_pkt2->ip_prot == OSPF_PROTOCOL ){
+                    ospf_packet_t *ospfpt = (ospf_packet_t *)(ip_pkt2 + 20);
+                    if( ospfpt->type == HELLO ){
+                        uchar bcast_mac[] = MAC_BCAST_ADDR;
+                        COPY_MAC( in_pkt->data.header.dst, bcast_mac );
+                    }
+                }
 		iface->devdriver->todev((void *)in_pkt);
 
 	}

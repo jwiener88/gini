@@ -17,7 +17,7 @@
 #include "ip.h"
 #include <netinet/in.h>
 #include <stdlib.h>
-
+#include "ospf.h"
 
 extern pktcore_t *pcore;
 extern classlist_t *classifier;
@@ -45,30 +45,40 @@ int findPacketSize(pkt_data_t *pkt)
 
 void *toEthernetDev(void *arg)
 {
-	gpacket_t *inpkt = (gpacket_t *)arg;
+        gpacket_t *inpkt = (gpacket_t *)arg;
 	interface_t *iface;
 	arp_packet_t *apkt;
+        //ospf_packet_t *ospkt;
 	char tmpbuf[MAX_TMPBUF_LEN];
 	int pkt_size;
 
 	verbose(2, "[toEthernetDev]:: entering the function.. ");
 	// find the outgoing interface and device...
-	if ((iface = findInterface(inpkt->frame.dst_interface)) != NULL)
+        if ((iface = findInterface(inpkt->frame.dst_interface)) != NULL)
 	{
-		/* send IP packet or ARP reply */
-		if (inpkt->data.header.prot == htons(ARP_PROTOCOL))
-		{
+		/* send IP packet, ARP reply, or OSPF packet */
+            if (inpkt->data.header.prot == htons(ARP_PROTOCOL)){
 			apkt = (arp_packet_t *) inpkt->data.data;
 			COPY_MAC(apkt->src_hw_addr, iface->mac_addr);
 			COPY_IP(apkt->src_ip_addr, gHtonl(tmpbuf, iface->ip_addr));
-		}
-		pkt_size = findPacketSize(&(inpkt->data));
+            }
+            else if (inpkt->data.header.prot == htons(IP_PROTOCOL))
+	    {
+                ip_packet_t *ip_pkt = (ip_packet_t *)inpkt->data.data;
+                if(ip_pkt->ip_prot == OSPF_PROTOCOL){
+                       // COPY_MAC(inpkt->data.header.dst, MAC_BCAST_ADDR);
+                        //COPY_IP(inpkt->)
+                }
+                //RECHECK determine if you're putting MAC address
+                //into the right place
+	    }
+                pkt_size = findPacketSize(&(inpkt->data));
 		verbose(2, "[toEthernetDev]:: vpl_sendto called for interface %d..%d bytes written ", iface->interface_id, pkt_size);
-		vpl_sendto(iface->vpl_data, &(inpkt->data), pkt_size);
-		free(inpkt);          // finally destroy the memory allocated to the packet..
-	} else
-		error("[toEthernetDev]:: ERROR!! Could not find outgoing interface ...");
-
+		int x = vpl_sendto(iface->vpl_data, &(inpkt->data), pkt_size);
+                free(inpkt);          // finally destroy the memory allocated to the packet..
+	} else{
+            error("[toEthernetDev]:: ERROR!! Could not find outgoing interface ...");
+        }
 	// this is just a dummy return -- return value not used.
 	return arg;
 }
@@ -81,6 +91,7 @@ void *toEthernetDev(void *arg)
  */
 void* fromEthernetDev(void *arg)
 {
+    
 	interface_t *iface = (interface_t *) arg;
 	interface_array_t *iarr = (interface_array_t *)iface->iarray;
 	uchar bcast_mac[] = MAC_BCAST_ADDR;
@@ -90,6 +101,7 @@ void* fromEthernetDev(void *arg)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);		// die as soon as cancelled
 	while (1)
 	{
+            //printf("In fromEthernet Dev\n");
 		verbose(2, "[fromEthernetDev]:: Receiving a packet ...");
 		if ((in_pkt = (gpacket_t *)malloc(sizeof(gpacket_t))) == NULL)
 		{
@@ -106,12 +118,24 @@ void* fromEthernetDev(void *arg)
 		if ((COMPARE_MAC(in_pkt->data.header.dst, iface->mac_addr) != 0) &&
 			(COMPARE_MAC(in_pkt->data.header.dst, bcast_mac) != 0))
 		{
-			verbose(1, "[fromEthernetDev]:: Packet dropped .. not for this router!? ");
-			free(in_pkt);
-			continue;
+                    ip_packet_t *ip_pkt2 = (ip_packet_t *)in_pkt->data.data;
+                    if( ip_pkt2->ip_prot == OSPF_PROTOCOL ){
+                        ospf_packet_t *ospfpt = (ospf_packet_t *)((uchar *)ip_pkt2 + 20);
+                        //printf("ethernet.c OSPF Type: %d\n", ospfpt->type);
+                        if( ospfpt->type != HELLO ){
+                            verbose(1, "[fromEthernetDev]:: FPacket dropped .. not for this router!? ");
+                            free(in_pkt);
+                            continue;
+                        }
+                    }
+                    else{
+                        verbose(1, "[fromEthernetDev]:: Packet dropped .. not for this router!? ");
+                        free(in_pkt);
+                        continue;
+                    }
 		}
-
-		// copy fields into the message from the packet..
+                
+                // copy fields into the message from the packet..
 		in_pkt->frame.src_interface = iface->interface_id;
 		COPY_MAC(in_pkt->frame.src_hw_addr, iface->mac_addr);
 		COPY_IP(in_pkt->frame.src_ip_addr, iface->ip_addr);
@@ -125,7 +149,10 @@ void* fromEthernetDev(void *arg)
 		}
 
 		verbose(2, "[fromEthernetDev]:: Packet is sent for enqueuing..");
-		enqueuePacket(pcore, in_pkt, sizeof(gpacket_t));
+                //printf("Sent for enqueuing\n");
+		//if( enqueuePacket(pcore, in_pkt, sizeof(gpacket_t)) == EXIT_SUCCESS ) printf("SUCCESSFULLY Enqueued.\n");
+                printf("Received Hello at ethernet.c\n");
+                enqueuePacket(pcore, in_pkt, sizeof(gpacket_t));
 	}
 }
 

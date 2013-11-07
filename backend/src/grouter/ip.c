@@ -17,6 +17,7 @@
 #include <slack/err.h>
 #include <netinet/in.h>
 #include <string.h>
+#include "ospf.h"
 
 route_entry_t route_tbl[MAX_ROUTES];       	// routing table
 mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
@@ -39,12 +40,15 @@ void IPInit()
  */
 void IPIncomingPacket(gpacket_t *in_pkt)
 {
+        printf("RECEIVED Something in IPINCOMINGPACKET.\n");    
 	char tmpbuf[MAX_TMPBUF_LEN];
 	// get a pointer to the IP packet
         ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
 	uchar bcast_ip[] = IP_BCAST_ADDR;
-
-	// Is this IP packet for me??
+        // Is this IP packet for me??
+        //ospf_packet_t *ospfpt = (uchar *)(ip_pkt + ntohs(ip_pkt->ip_pkt_len));
+        //printf("IP.c at Receiving end OSPF Type: %d\n", ospfpt->type);
+        printf("Protocol of received IP packet: %d\n", ip_pkt->ip_prot);
 	if (IPCheckPacket4Me(in_pkt))
 	{
 		verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");
@@ -72,6 +76,7 @@ void IPIncomingPacket(gpacket_t *in_pkt)
  */
 int IPCheckPacket4Me(gpacket_t *in_pkt)
 {
+        //printf("RECEIVED Something in IPCHECKPACKET.\n");    
 	ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
 	char tmpbuf[MAX_TMPBUF_LEN];
 	int count, i;
@@ -259,6 +264,7 @@ int IPCheck4Fragmentation(gpacket_t *in_pkt)
  */
 int IPCheck4Redirection(gpacket_t *in_pkt)
 {
+        //printf("RECEIVED Something in IPRedirection.\n");    
 	char tmpbuf[MAX_TMPBUF_LEN];
 	gpacket_t *cp_pkt;
 	ip_packet_t *ip_pkt = (ip_packet_t *)in_pkt->data.data;
@@ -271,7 +277,7 @@ int IPCheck4Redirection(gpacket_t *in_pkt)
 		       IP2Dot(tmpbuf, gNtohl((tmpbuf+20), ip_pkt->ip_src)));
 
 		cp_pkt = duplicatePacket(in_pkt);
-
+                //printf("")
 		ICMPProcessRedirect(cp_pkt, cp_pkt->frame.nxth_ip_addr);
 	}
 
@@ -359,9 +365,8 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 	ip_pkt->ip_ttl = 64;                        // set TTL to default value
 	ip_pkt->ip_cksum = 0;                       // reset the checksum field
 	ip_pkt->ip_prot = src_prot;  // set the protocol field
-
-
-	if (newflag == 0)
+        
+        if (newflag == 0)
 	{
 		COPY_IP(ip_pkt->ip_dst, ip_pkt->ip_src); 		    // set dst to original src
 		COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, pkt->frame.src_ip_addr));    // set src to me
@@ -382,8 +387,7 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 		RESET_DF_BITS(ip_pkt->ip_frag_off);
 		RESET_MF_BITS(ip_pkt->ip_frag_off);
 		ip_pkt->ip_frag_off = 0;
-
-		COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
+                COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
 		ip_pkt->ip_pkt_len = htons(size + ip_pkt->ip_hdr_len * 4);
 
 		verbose(2, "[IPOutgoingPacket]:: lookup next hop ");
@@ -401,7 +405,42 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 		// the outgoing packet should have the interface IP as source
 		COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, iface_ip_addr));
 		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
-	} else
+	}
+        else if( newflag == 2 ){//OSPF Hello
+            // non REPLY PACKET -- this is a new packet; set all fields
+		ip_pkt->ip_version = 4;
+		ip_pkt->ip_hdr_len = 5;
+		ip_pkt->ip_tos = 0;
+		ip_pkt->ip_identifier = IP_OFFMASK & random();
+		RESET_DF_BITS(ip_pkt->ip_frag_off);
+		RESET_MF_BITS(ip_pkt->ip_frag_off);
+		ip_pkt->ip_frag_off = 0;
+                COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
+		ip_pkt->ip_pkt_len = htons(size + ip_pkt->ip_hdr_len * 4);
+                
+		verbose(2, "[IPOutgoingPacket]:: lookup next hop ");
+		// find the nexthop and interface and fill them in the "meta" frame
+		// NOTE: the packet itself is not modified by this lookup!
+		if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst),
+				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE)
+				   return EXIT_FAILURE;
+
+		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
+		// lookup the IP address of the destination interface..
+		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
+					      iface_ip_addr)) == EXIT_FAILURE)
+					      return EXIT_FAILURE;
+		// the outgoing packet should have the interface IP as source
+		COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, iface_ip_addr));
+		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
+                dst_ip[0] = 255;
+                //COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
+                //printf("All is well.\n");
+                //ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *) ip_pkt + 20);
+                //ospf_packet_t *ospfpt = (uchar *)(ip_pkt + ntohs(ip_pkt->ip_pkt_len));
+                //printf("IP.c OSPF Type: %d\n", ospfpt->type);
+        }
+        else
 	{
 		error("[IPOutgoingPacket]:: unknown outgoing packet action.. packet discarded ");
 		return EXIT_FAILURE;
@@ -411,7 +450,9 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 	cksum = checksum((uchar *)ip_pkt, ip_pkt->ip_hdr_len*2);
 	ip_pkt->ip_cksum = htons(cksum);
 	pkt->data.header.prot = htons(IP_PROTOCOL);
-
+        //to avoid the if clauses in gnet
+        pkt->frame.arp_valid = FALSE;
+        pkt->frame.arp_bcast = TRUE;
 	IPSend2Output(pkt);
 	verbose(2, "[IPOutgoingPacket]:: IP packet sent to output queue.. ");
 	return EXIT_SUCCESS;

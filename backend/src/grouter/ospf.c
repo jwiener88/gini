@@ -21,11 +21,14 @@ extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
 
 
 
-void OSPFinit(int *ospfHellos) {
+void OSPFinit() {
+    printf("Inside OSPF\n");
     int thread_stat;
-    getMyIp(router.ipAddress);
+    if( getMyIp(router.ipAddress) == EXIT_FAILURE ) return;
     numOfNeighbours = 0;
-    thread_stat = pthread_create((pthread_t *)ospfHellos, NULL, OSPFBroadcastHello, NULL);
+    int *ospfHellos = 0;
+    pthread_t threadid;
+    thread_stat = pthread_create(&(threadid), NULL, (void *)OSPFBroadcastHello, (void *)NULL);
 }
 
 int getMyIp(uint8_t *myIp) {
@@ -55,54 +58,63 @@ int getMyIp(uint8_t *myIp) {
 }
 
 extern pktcore_t *pcore;
-
+extern interface_array_t netarray;
 /**
  * Sends a hello packet to all routers in the interface.  
  * @return Success or Failure. 
  */
 void *OSPFBroadcastHello() {
     int count, i, j;
-    uint8_t ipBuffer[MAXNODES][4];
+    char tmpbuf[MAX_TMPBUF_LEN];
+    printf("In OSPFBroad.\n");
     while(1){
-        if ((count = findAllInterfaceIPs(MTU_tbl, ipBuffer)) > 0) {
-            //CREATE HELLO
-            ospf_packet_t *ospfMessage = helloInit();
-            _ospf_hello_msg *hello = ospfMessage->data;
-            //LOOP Send to all interfaceIPs
-            for (i = 0; i < count; i++) {
-                OSPFSendHello(ospfMessage, ipBuffer[i]);
-            }
-            sleep(hello->interval);
-            
+        interface_t *currIface = netarray.elem;
+        ospf_packet_t *ospfMessage = helloInit();
+        _ospf_hello_msg *hello = ospfMessage->data;
+        //printf("NetarrayCount %d\n", netarray.count);
+        interface_t *ifptr;
+        for( i = 0; i < netarray.count; i++ ){
+            ifptr = netarray.elem[i];
+            if( ifptr == NULL ) continue;
+            //currIface += sizeof(netarray->elem);
+            OSPFSendHello(ospfMessage, ifptr->ip_addr);
+            //printf("IfPTR value %s.\n", IP2Dot(tmpbuf, ifptr->ip_addr));
         }
+        sleep(hello->interval);
     }
 }
 
-int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]) {
+int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip) {
     char tmpBuff[MAX_TMPBUF_LEN];
     
     gpacket_t *out_pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
     ip_packet_t *ipkt = (ip_packet_t*) (out_pkt->data.data);
     ipkt->ip_hdr_len = 5; // no IP header options!!
     ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
+    
     //this is the general ospf packet. 
     memcpy(opkt, hello, hello->messageLength*4); //copy the data from hello into this packet. 
-
-    if (getMyIp(opkt->sourceIP) == EXIT_FAILURE) {
-        return EXIT_FAILURE;
-    }
+    //uncomment out this later
+//    if (getMyIp(opkt->sourceIP) == EXIT_FAILURE) {
+//        return EXIT_FAILURE;
+//    }
 
     //ushort cksm = checksum(opkt, opkt->messageLength);
     //opkt->checksum = htons(cksm);
-    verbose(2, "SENDING HELLO to %s", IP2Dot(tmpBuff, ip));
-    IPOutgoingPacket(out_pkt, ip, opkt->messageLength, 1, OSPF_PROTOCOL);
+    //verbose(2, "SENDING HELLO to %s", IP2Dot(tmpBuff, ip));
+	//char tmpbuf[MAX_TMPBUF_LEN];
+    printf("Sending to interface %s\n",IP2Dot(tmpBuff,dst_ip) );
+    printf("OSPF.c OSPF Type:%d\n", opkt->type);
+    IPOutgoingPacket(out_pkt, dst_ip, opkt->messageLength, 2, OSPF_PROTOCOL);
 
 }
 
+//fix this so that it creates a "Hello" msg which
+//is added to a ospf packet. do LSU in the same way
 ospf_packet_t* helloInit() {
     ospf_packet_t *head = malloc(sizeof (ospf_packet_t));
     head->type = HELLO;
-    _ospf_hello_msg *hello =(_ospf_hello_msg *)((uchar *)head + 4*4);
+    _ospf_hello_msg *hello =(_ospf_hello_msg *)((uchar *)head + 4*4);//assigning the Hello msg to the data of Header
     head->version = 2;
     head->areaID = 0;
     head->authType= 0;
@@ -156,6 +168,7 @@ void OSPFProcess(gpacket_t *in_pkt) {
 }
 
 void OSPFProcessHello(gpacket_t *in_pkt){
+    printf("RECEIVED Something.\n");
     ip_packet_t *ipkt = (ip_packet_t *)in_pkt->data.data;
     int iphdrlen = ipkt->ip_hdr_len *4;
     ospf_packet_t *ospfhdr = (ospf_packet_t *)((uchar *)ipkt + iphdrlen);

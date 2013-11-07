@@ -98,7 +98,7 @@ typedef struct routerNode{
     uint8_t children[MAXNODES][4];
 }routerNode;
 
-void OSPFinit(int *ospfHellos);
+void OSPFinit();
 int getMyIp(uint8_t *myIp);
 void *OSPFBroadcastHello();
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]);

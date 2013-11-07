@@ -39,7 +39,7 @@ pthread_t info_threadid;
 int __vpl_sendto(int fd, void *buf, int len, void *to, int sock_len)
 {
 	int n;
-
+        printf("In ___vpl_sendto\n");
 	while(((n = sendto(fd, buf, len, 0, (struct sockaddr *) to,
                            sock_len)) < 0) && (errno == EINTR)) ;
 	if(n < 0)
@@ -320,8 +320,9 @@ int vpl_recvfrom(vpl_data_t *vpl, void *buf, int len)
 
 int vpl_sendto(vpl_data_t *vpl, void *buf, int len)
 {
+        printf("In vpl_sendto\n");
 	struct sockaddr_un *data_addr = vpl->data_addr;
-
+        
 	return(__vpl_sendto(vpl->data, buf, len, data_addr, sizeof(*data_addr)));
 }
 

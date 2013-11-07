@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-
+#include "ospf.h"
 
 Map *cli_map;
 Mapper *cli_mapper;
@@ -122,9 +122,9 @@ int CLIInit(router_config *rarg)
 void *CLIProcessCmdsInteractive(void *arg)
 {
 	FILE *fp = (FILE *)arg;
-
 	CLIPrintHelpPreamble();
-	CLIProcessCmds(fp, 1);
+        OSPFinit();
+        CLIProcessCmds(fp, 1);
 }
 
 

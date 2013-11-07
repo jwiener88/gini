@@ -93,8 +93,9 @@ int main(int ac, char *av[])
 
 	// start the CLI..
 	CLIInit(&(rconfig));
-
-        OSPFinit(&(rconfig.ospf_hellos));
+        //printf("Printing Stufffffffffffff\n");
+        //verbose(1, "SENDING HELLO", IP2Dot(tmpBuff, ip));
+        //OSPFinit(&(rconfig.ospf_hellos));
 
 	wait4thread(rconfig.scheduler);
 	wait4thread(rconfig.worker);

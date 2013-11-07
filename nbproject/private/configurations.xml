@@ -278,6 +278,16 @@
         <df name="gini">
           <df name="filesystem">
           </df>
+          <df name="gbuilder">
+            <df name="images">
+            </df>
+          </df>
+          <df name="gloader">
+          </df>
+          <df name="grouter">
+            <df name="helpdefs">
+            </df>
+          </df>
         </df>
       </df>
     </df>
