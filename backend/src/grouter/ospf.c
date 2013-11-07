@@ -15,6 +15,7 @@
 
 
 uint8_t neighbours[MAXNODES][4];
+uint8_t aliveVal[MAXNODES];
 int numOfNeighbours;
 routerNode router;
 extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
@@ -193,6 +194,7 @@ void OSPFProcessHello(gpacket_t *in_pkt){
     COPY_IP(source, ospfhdr->sourceIP);
     if( numOfNeighbours == 0 ){
         memcpy(neighbours[numOfNeighbours++], source, 4);
+        aliveVal[numOfNeighbours-1] = 40;
     }
     else{
         int i, isKnownNeighbour = 0;
@@ -200,12 +202,14 @@ void OSPFProcessHello(gpacket_t *in_pkt){
             // compare ospfhdr->sourceIP to all neighbours;
             if (COMPARE_IP(source, neighbours[i]) == 0){
             //the source is known as my neighbour. 
+                aliveVal[i] = 40;
                 isKnownNeighbour = 1;
                 break;
             }
         }
         if(isKnownNeighbour == 0){
             memcpy(neighbours[numOfNeighbours++], source, 4);
+            aliveVal[numOfNeighbours-1] = 40;
         }
     }
 }
