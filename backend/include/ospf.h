@@ -31,7 +31,7 @@ typedef struct ospf_packet_t{
 //    neighbour_ips* next;
 //}neighbour_ips;
 
-typedef struct _ospf_hello_msg{
+typedef struct ospf_hello_t{
     uint32_t netMask;
     uint16_t interval;
     uint8_t options;
@@ -41,7 +41,7 @@ typedef struct _ospf_hello_msg{
     uint8_t backupDesigIP[4];
     uint8_t neighbours[][4]; //flexible array for IPs
     //when initialized, we need to calloc this struct. 
-} _ospf_hello_msg;
+} ospf_hello_t;
 
 //Not used in this project but we have it anyways.
 //typedef struct _ospf_datab_description {
@@ -84,13 +84,13 @@ typedef struct _update_link{
     uint16_t pad2;
     uint16_t pad3;
     uint16_t metric;
-}LINK;
+}lnk;
 
-typedef struct _ospf_LS_update {
+typedef struct ospf_LSU {
     _ospf_LSA lsaHeader;
     uint16_t padding;
     uint16_t numOfLinks;
-    LINK links[];
+    lnk links[];
 }ospf_LSU;
 
 typedef struct routerNode{

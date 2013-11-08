@@ -15,7 +15,8 @@
 
 
 uint8_t neighbours[MAXNODES][4];
-uint8_t aliveVal[MAXNODES];
+uint32_t aliveVal[MAXNODES];
+
 int numOfNeighbours;
 routerNode router;
 extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
@@ -70,7 +71,7 @@ void *OSPFBroadcastHello() {
     while(1){
         interface_t *currIface = netarray.elem;
         ospf_packet_t *ospfMessage = helloInit();
-        _ospf_hello_msg *hello = ospfMessage->data;
+        ospf_hello_t *hello = ospfMessage->data;
         printf("\nNEIGHBOURS DISOVERED SO FAR: %d\n", numOfNeighbours);
         for( i = 0; i < numOfNeighbours; i++ ){
             printf("%d.%d.%d.%d\n", neighbours[i][3], neighbours[i][2], neighbours[i][1], neighbours[i][0]);
@@ -92,14 +93,6 @@ void *OSPFBroadcastHello() {
         
     }
 }
-
-/*void OSPFAlive(){
-    sleep(40);
-    int i;
-    for( i = 0; i < numOfNeighbours; i++ ){
-        
-    }
-}*/
 
 int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip) {
     char tmpBuff[MAX_TMPBUF_LEN];
@@ -132,7 +125,7 @@ int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip) {
 ospf_packet_t* helloInit() {
     ospf_packet_t *head = malloc(sizeof (ospf_packet_t));
     head->type = HELLO;
-    _ospf_hello_msg *hello =(_ospf_hello_msg *)((uchar *)head + 4*4);//assigning the Hello msg to the data of Header
+    ospf_hello_t *hello =(ospf_hello_t *)((uchar *)head + 4*4);//assigning the Hello msg to the data of Header
     head->version = 2;
     head->areaID = 0;
     head->authType= 0;
@@ -188,13 +181,13 @@ void OSPFProcessHello(gpacket_t *in_pkt){
     ip_packet_t *ipkt = (ip_packet_t *)in_pkt->data.data;
     int iphdrlen = ipkt->ip_hdr_len *4;
     ospf_packet_t *ospfhdr = (ospf_packet_t *)((uchar *)ipkt + iphdrlen);
-    _ospf_hello_msg *hellomsg = ospfhdr->data;
+    ospf_hello_t *hellomsg = ospfhdr->data;
     uint8_t source[4];
     char tmpbuf[MAX_TMPBUF_LEN];
     COPY_IP(source, ospfhdr->sourceIP);
     if( numOfNeighbours == 0 ){
-        memcpy(neighbours[numOfNeighbours++], source, 4);
-        aliveVal[numOfNeighbours-1] = 40;
+        memcpy(neighbours[0], source, 4);
+        aliveVal[0] = hellomsg->routerDeadInter;
     }
     else{
         int i, isKnownNeighbour = 0;
@@ -202,18 +195,40 @@ void OSPFProcessHello(gpacket_t *in_pkt){
             // compare ospfhdr->sourceIP to all neighbours;
             if (COMPARE_IP(source, neighbours[i]) == 0){
             //the source is known as my neighbour. 
-                aliveVal[i] = 40;
+                aliveVal[i] = hellomsg->routerDeadInter;
                 isKnownNeighbour = 1;
                 break;
             }
         }
         if(isKnownNeighbour == 0){
-            memcpy(neighbours[numOfNeighbours++], source, 4);
-            aliveVal[numOfNeighbours-1] = 40;
+            memcpy(neighbours[numOfNeighbours], source, 4);
+            aliveVal[numOfNeighbours++] = hellomsg->routerDeadInter;
+        }
+    }
+}
+void *OSPFAlive(){
+    sleep(5);
+    int i;
+    for( i = 0; i < numOfNeighbours; i++ ){
+        aliveVal[i] -= 5;
+        if (aliveVal[i] <= 0){
+            aliveVal[i] = 0;
+            //TODO: SEND LSU.
         }
     }
 }
 
+void makeLSU(lnk links[]){
+    
+}
+
+
 void OSPFProcessLSU(gpacket_t *in_pkt){
+     printf("RECEIVED at OSPF ProcessLSU: \n");
+    ip_packet_t *ipkt = (ip_packet_t *)in_pkt->data.data;
+    int iphdrlen = ipkt->ip_hdr_len *4;
+    ospf_packet_t *ospfhdr = (ospf_packet_t *)((uchar *)ipkt + iphdrlen);
+    ospf_LSU* LSUhdr = (ospf_LSU *)((uchar *)ospfhdr + 4);
+    //TODO: The rest of the processing.  
     
 }
