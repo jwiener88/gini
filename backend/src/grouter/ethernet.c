@@ -122,15 +122,15 @@ void* fromEthernetDev(void *arg)
                     if( ip_pkt2->ip_prot == OSPF_PROTOCOL ){
                         ospf_packet_t *ospfpt = (ospf_packet_t *)((uchar *)ip_pkt2 + 20);
                         //printf("ethernet.c OSPF Type: %d\n", ospfpt->type);
-                        if( ospfpt->type != HELLO ){
+                        /*if( ospfpt->type != HELLO ){//Because we ACCEPT all OSPF
                             verbose(1, "[fromEthernetDev]:: FPacket dropped .. not for this router!? ");
                             free(in_pkt);
                             continue;
-                        }
+                        }*/
                     }
                     else{
-                        verbose(1, "[fromEthernetDev]:: SPacket dropped .. not for this router!? ");
-                        printf("Dropped protocol: %d\n", ip_pkt2->ip_prot);
+                        verbose(2, "[fromEthernetDev]:: SPacket dropped .. not for this router!? ");
+                        //printf("Dropped protocol: %d\n", ip_pkt2->ip_prot);
                         free(in_pkt);
                         continue;
                     }

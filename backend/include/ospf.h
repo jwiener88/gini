@@ -4,7 +4,7 @@
  This file contains the functionality of OSPF
  */
 
-#define MAXNODES 50
+#define MAXNODES 10
 #define MAXSIZE 300
 //All of this may need to move to the header. 
 typedef struct ospf_packet_t{
@@ -67,18 +67,9 @@ typedef struct _ospf_LS_request {
     uint8_t advertRouterIp[4]; 
 }_ospf_LS_request;
 
-typedef struct _ospf_LSA {
-    uint16_t lsAge;
-    uint16_t lsType;
-    uint32_t linkStateId;
-    uint8_t advertRouterIp[4];
-    uint32_t linkSequenceNumber;
-    uint16_t lsChecksum, lsLength;
-}_ospf_LSA;
-
 typedef struct _update_link{
-    uint32_t linkID;
-    uint32_t linkData;
+    uint8_t linkID[4];
+    uint8_t linkData[4];
     uint8_t type;
     uint8_t pad1;
     uint16_t pad2;
@@ -86,12 +77,23 @@ typedef struct _update_link{
     uint16_t metric;
 }lnk;
 
+
 typedef struct ospf_LSU {
-    _ospf_LSA lsaHeader;
     uint16_t padding;
     uint16_t numOfLinks;
     lnk links[];
 }ospf_LSU;
+
+typedef struct LS_Packet {
+    uint16_t lsAge;
+    uint16_t lsType;
+    uint8_t linkStateId[4];
+    uint8_t advertRouterIp[4];
+    uint32_t linkSequenceNumber;
+    uint16_t lsChecksum;
+    uint16_t lsLength;
+    uint8_t data[DEFAULT_MTU-36-20]; //minus IP and OSPF header, minus LSA header. 
+}LS_Packet;
 
 typedef struct routerNode{
     uint8_t ipAddress[4];
@@ -106,3 +108,6 @@ ospf_packet_t* helloInit();
 void OSPFProcess(gpacket_t *in_pkt);
 void OSPFProcessHello(gpacket_t *in_pkt);
 void OSPFProcessLSU(gpacket_t *in_pkt);
+void broadcastLSU(LS_Packet *lspkt);
+void *OSPFAlive();
+void makeLSUPacket( LS_Packet *lsp );
