@@ -56,7 +56,7 @@ void *toEthernetDev(void *arg)
 	// find the outgoing interface and device...
         if ((iface = findInterface(inpkt->frame.dst_interface)) != NULL)
 	{
-		/* send IP packet, ARP reply, or OSPF packet */
+            /* send IP packet, ARP reply, or OSPF packet */
             if (inpkt->data.header.prot == htons(ARP_PROTOCOL)){
 			apkt = (arp_packet_t *) inpkt->data.data;
 			COPY_MAC(apkt->src_hw_addr, iface->mac_addr);
@@ -66,8 +66,7 @@ void *toEthernetDev(void *arg)
 	    {
                 ip_packet_t *ip_pkt = (ip_packet_t *)inpkt->data.data;
                 if(ip_pkt->ip_prot == OSPF_PROTOCOL){
-                       // COPY_MAC(inpkt->data.header.dst, MAC_BCAST_ADDR);
-                        //COPY_IP(inpkt->)
+                
                 }
                 //RECHECK determine if you're putting MAC address
                 //into the right place
@@ -102,6 +101,7 @@ void* fromEthernetDev(void *arg)
 	while (1)
 	{
             //printf("In fromEthernet Dev\n");
+            
 		verbose(2, "[fromEthernetDev]:: Receiving a packet ...");
 		if ((in_pkt = (gpacket_t *)malloc(sizeof(gpacket_t))) == NULL)
 		{
@@ -118,19 +118,12 @@ void* fromEthernetDev(void *arg)
 		if ((COMPARE_MAC(in_pkt->data.header.dst, iface->mac_addr) != 0) &&
 			(COMPARE_MAC(in_pkt->data.header.dst, bcast_mac) != 0))
 		{
-                    ip_packet_t *ip_pkt2 = (ip_packet_t *)in_pkt->data.data;
-                    if( ip_pkt2->ip_prot == OSPF_PROTOCOL ){
-                        ospf_packet_t *ospfpt = (ospf_packet_t *)((uchar *)ip_pkt2 + 20);
-                        //printf("ethernet.c OSPF Type: %d\n", ospfpt->type);
-                        /*if( ospfpt->type != HELLO ){//Because we ACCEPT all OSPF
-                            verbose(1, "[fromEthernetDev]:: FPacket dropped .. not for this router!? ");
-                            free(in_pkt);
-                            continue;
-                        }*/
+                    ip_packet_t *ip_pkt = (ip_packet_t *)in_pkt->data.data;
+                    if( ip_pkt->ip_prot == OSPF_PROTOCOL ){
+                        
                     }
                     else{
                         verbose(2, "[fromEthernetDev]:: SPacket dropped .. not for this router!? ");
-                        //printf("Dropped protocol: %d\n", ip_pkt2->ip_prot);
                         free(in_pkt);
                         continue;
                     }
@@ -150,9 +143,6 @@ void* fromEthernetDev(void *arg)
 		}
 
 		verbose(2, "[fromEthernetDev]:: Packet is sent for enqueuing..");
-                //printf("Sent for enqueuing\n");
-		//if( enqueuePacket(pcore, in_pkt, sizeof(gpacket_t)) == EXIT_SUCCESS ) printf("SUCCESSFULLY Enqueued.\n");
-                //printf("Received Hello at ethernet.c\n");
                 enqueuePacket(pcore, in_pkt, sizeof(gpacket_t));
 	}
 }

@@ -10,7 +10,7 @@
 typedef struct ospf_packet_t{
     uint8_t version;
     uint8_t type;
-    uint16_t messageLength; //in words (4byts/word)
+    uint16_t messageLength; //in words (4byts/word). size of entire ospf packet (header+data)
     uint8_t sourceIP[4];   //4 8-bit numbers 
     uint32_t areaID; // areadID is 0 for this project
     uint16_t checksum;
@@ -104,10 +104,13 @@ void OSPFinit();
 int getMyIp(uint8_t *myIp);
 void *OSPFBroadcastHello();
 int OSPFSendHello(ospf_packet_t* hello, uint8_t ip[]);
-ospf_packet_t* helloInit();
+ospf_packet_t* getHello();
+ospf_packet_t* getLSU();
 void OSPFProcess(gpacket_t *in_pkt);
-void OSPFProcessHello(gpacket_t *in_pkt);
-void OSPFProcessLSU(gpacket_t *in_pkt);
-void broadcastLSU(LS_Packet *lspkt);
+void OSPFProcessHello(ospf_packet_t *in_pkt);
 void *OSPFAlive();
-void makeLSUPacket( LS_Packet *lsp );
+void LSUInit( LS_Packet *lsp );
+void OSPFProcessLSU(ospf_packet_t *in_pkt);
+void OSPFBroadcastLSU();
+void OSPFForwardLSU( int i );
+void OSPFSendLSU( LS_Packet *lsp, uchar *dst_ip );

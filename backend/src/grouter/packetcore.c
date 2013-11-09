@@ -26,6 +26,8 @@
 #include "message.h"
 #include "classifier.h"
 #include "grouter.h"
+//#include "ospf.h"
+#include "ip.h"
 
 extern classlist_t *classifier;
 

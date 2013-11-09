@@ -40,7 +40,11 @@ void IPInit()
  */
 void IPIncomingPacket(gpacket_t *in_pkt)
 {
-        //printf("RECEIVED Something in IPINCOMINGPACKET.\n");    
+        /*printf("IPINCOMINGPACKET IPPROTOCOL ");    
+        ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
+        char tmpbuf[MAX_TMPBUF_LEN];
+        ospf_packet_t *ospf_hdr = (ospf_packet_t *) ((uchar *) ip_pkt + ip_pkt->ip_hdr_len * 4);
+        printf("Received Hello from: %s\n", IP2Dot(tmpbuf, ospf_hdr->sourceIP));*/
 	char tmpbuf[MAX_TMPBUF_LEN];
 	// get a pointer to the IP packet
         ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
@@ -441,10 +445,10 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
                 //dst_ip[0] = 255;
                 COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
-                //printf("All is well.\n");
-                //ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *) ip_pkt + 20);
-                //ospf_packet_t *ospfpt = (uchar *)(ip_pkt + ntohs(ip_pkt->ip_pkt_len));
-                //printf("IP.c OSPF Type: %d\n", ospfpt->type);
+                ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *)ip_pkt + ip_pkt->ip_hdr_len * 4);
+                //to avoid the if clauses in gnet
+                pkt->frame.arp_valid = FALSE;
+                pkt->frame.arp_bcast = TRUE;
         }
         else
 	{
@@ -456,11 +460,7 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 	cksum = checksum((uchar *)ip_pkt, ip_pkt->ip_hdr_len*2);
 	ip_pkt->ip_cksum = htons(cksum);
 	pkt->data.header.prot = htons(IP_PROTOCOL);
-        //to avoid the if clauses in gnet
-        pkt->frame.arp_valid = FALSE;
-        pkt->frame.arp_bcast = TRUE;
-        //printf("IPOUTGOING Prot:%d\n",ip_pkt->ip_prot);
-	IPSend2Output(pkt);
+        IPSend2Output(pkt);
 	verbose(2, "[IPOutgoingPacket]:: IP packet sent to output queue.. ");
 	return EXIT_SUCCESS;
 }

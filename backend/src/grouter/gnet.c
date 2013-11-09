@@ -790,7 +790,7 @@ void *GNETHandler(void *outq)
                 else{
                     ip_packet_t *ip_pkt2 = (ip_packet_t *)in_pkt->data.data;
                     if( ip_pkt2->ip_prot == OSPF_PROTOCOL ){
-                        ospf_packet_t *ospfpt = (ospf_packet_t *)(ip_pkt2 + 20);
+                        //ospf_packet_t *ospfpt = (ospf_packet_t *)(ip_pkt2 + 20);
                         //if( ospfpt->type == HELLO ){ Because we BROADCAST to everyone
                             uchar bcast_mac[6] = MAC_BCAST_ADDR;
                             COPY_MAC( in_pkt->data.header.dst, bcast_mac );
