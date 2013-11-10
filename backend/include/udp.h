@@ -1,6 +1,8 @@
 #include "mtu.h"
 #include "ip.h"
 
+//useful reference: http://medusa.sdsu.edu/network/CS576/Lectures/ch11_UDP.pdf
+
 typedef struct udp_pkt_t {
     uint16_t source_port;
     uint16_t dest_port;
@@ -20,3 +22,13 @@ typedef struct udp_psuedo_header_t{
     udp_pkt_t pkt; //the packet we are interested in. 
 }udp_pseudo_header;
 
+typedef struct pcb_t{
+    uint16_t local_port;
+    
+    
+}pcb_t;
+
+int socket(int type);
+int bind(int sockid, int port);
+int sendto(int sockid, int destip, int dport, char *message, int len);
+int recvfrom(int sockid, int *srcip, int *sport, char **message, int len);
