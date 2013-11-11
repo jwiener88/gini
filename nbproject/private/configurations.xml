@@ -49,6 +49,7 @@
           <in>cli.h</in>
           <in>device.h</in>
           <in>devicedefs.h</in>
+          <in>dijkstra.h</in>
           <in>ethernet.h</in>
           <in>filter.h</in>
           <in>fragment.h</in>
@@ -130,6 +131,7 @@
             <in>classifier.c</in>
             <in>cli.c</in>
             <in>console.c</in>
+            <in>dijkstra.c</in>
             <in>ethernet.c</in>
             <in>filter.c</in>
             <in>fragment.c</in>

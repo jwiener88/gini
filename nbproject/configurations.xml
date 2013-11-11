@@ -3,12 +3,16 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
       <df name="backend">
+        <df name="include">
+          <in>dijkstra.h</in>
+        </df>
         <df name="src">
           <df name="grouter">
             <in>arp.c</in>
             <in>classifier.c</in>
             <in>cli.c</in>
             <in>console.c</in>
+            <in>dijkstra.c</in>
             <in>ethernet.c</in>
             <in>filter.c</in>
             <in>fragment.c</in>
@@ -111,6 +115,8 @@
           <executablePath></executablePath>
         </makeTool>
       </makefileType>
+      <item path="backend/include/dijkstra.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="backend/src/grouter/arp.c" ex="false" tool="0" flavor2="2">
         <cTool>
         </cTool>
@@ -126,6 +132,8 @@
       <item path="backend/src/grouter/console.c" ex="false" tool="0" flavor2="2">
         <cTool>
         </cTool>
+      </item>
+      <item path="backend/src/grouter/dijkstra.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="backend/src/grouter/ethernet.c" ex="false" tool="0" flavor2="2">
         <cTool>

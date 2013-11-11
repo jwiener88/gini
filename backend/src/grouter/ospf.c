@@ -12,7 +12,7 @@
 #include "gnet.h"
 #include "mtu.h"
 #include "ip.h"
-
+#include "dijkstra.h"
 
 uint8_t neighbours[MAXNODES][4];
 int numOfNeighbours, lsuSeq;
@@ -81,6 +81,7 @@ void *OSPFBroadcastHello() {
             //Sending the OSPF Packet along with own interface IP
             OSPFSendHello(ospfMessage, ifptr->ip_addr);
         }
+        dijkstraInit( LSTable, LSTableSize );
         sleep(hello->interval);
     }
 }
