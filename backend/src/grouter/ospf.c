@@ -19,7 +19,7 @@ int numOfNeighbours, lsuSeq;
 int bcastLSUcnt;
 uint32_t aliveVal[MAXNODES];
 
-LS_Packet LSTable[MAXNODES];
+LSA_Packet LSTable[MAXNODES];
 uint16_t LSTableSize;
 routerNode router;
 extern mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
@@ -38,15 +38,15 @@ void OSPFinit() {
     //thread_stat2 = pthread_create(&(threadid2), NULL, (void *)OSPFAlive, (void *)NULL);
 }
 
-void LSUInit( LS_Packet *lsp ){
+void LSUInit( LSA_Packet *lsp ){
     //fixing head
     lsp->lsAge = 0;
-    lsp->lsType = 2;
+    lsp->lsType = 1;
     getMyIp(lsp->linkStateId);
     COPY_IP(lsp->advertRouterIp, lsp->linkStateId);
     lsp->linkSequenceNumber = lsuSeq++;
     lsp->lsChecksum = 0;
-    lsp->lsLength = 5 + 1 + 0;//LS_Packet Header, LSU header, number of links
+    lsp->lsLength = (5 + 1 + (1 * 4)) * 4;//LS_Packet Header, LSU header, number of links [in bytes]
         
     ospf_LSU *lsu = (ospf_LSU *) lsp->data;
     lsu->numOfLinks = 0; //LATER change this to take in stubs?
@@ -68,6 +68,7 @@ void *OSPFBroadcastHello() {
             printf("%s\n", IP2Dot(tmpbuf, ipp));
         }
         printf("\nBROADCAST ROUND: %d, Number of interfaces: %d\n", ++count, netarray.count);
+        printLSU();
         interface_t *ifptr;
         for( i = 1; i <= netarray.count; i++ ){
             ifptr = netarray.elem[i];
@@ -94,7 +95,7 @@ int OSPFSendHello(ospf_packet_t* hello, uchar *dst_ip){
     ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
     
     //The OSPF Packet "hello" is copied to the appropriate address of the General Packet
-    memcpy(opkt, hello, hello->messageLength * 4);
+    memcpy(opkt, hello, hello->messageLength);
     //The OSPF Packet's source IP has not previously been set. It's the interface's IP.
     COPY_IP(opkt->sourceIP, dst_ip);
     char tmpbuf[MAX_TMPBUF_LEN];
@@ -156,10 +157,11 @@ ospf_packet_t* getHello() {
     
     int i;
     for (i = 0; i < numOfNeighbours; ++i){
-        COPY_IP(hello->neighbours[i], neighbours[i]);
+        COPY_IP(&(hello->neighbours[i]), neighbours + i);
     }
-    //hello header size + num of neighbours [size in words]
-    head->messageLength = 9 + numOfNeighbours;
+    //hello header size + num of neighbours [size in bytes]
+    //head->messageLength = (9 + numOfNeighbours) * 4;
+    head->messageLength = (9 + 10) * 4;//fixed 10 in struct
     //PPOF
     return head;
 }
@@ -176,9 +178,9 @@ ospf_packet_t* getLSU() {
     head->checksum = NULL;
     head->authType= 0;
     //Copy LSU Message from LSTable and point it to the data section of head
-    LS_Packet *lsu =(LS_Packet *)(head->data);
-    memcpy(lsu, LSTable, sizeof(LS_Packet));
-    head->messageLength = 4 + lsu->lsLength;
+    LSA_Packet *lsu =(LSA_Packet *)(head->data);
+    memcpy(lsu, LSTable, sizeof(LSA_Packet));
+    head->messageLength = (4 * 4) + lsu->lsLength;//[size in bytes]
     return head;
 }
 
@@ -213,7 +215,7 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr){
     //Find the Hello Message
     ospf_hello_t *hellomsg = ospfhdr->data;
     uint8_t source[4];
-    char tmpbuf[MAX_TMPBUF_LEN];
+    char tmpbuf[MAX_TMPBUF_LEN], tmpbuf2[MAX_TMPBUF_LEN];
     COPY_IP(source, ospfhdr->sourceIP);
     printf("RECEIVED HELLO from %s.\n", IP2Dot(tmpbuf, source));
     int i, isKnownNeighbour = 0;
@@ -241,21 +243,23 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr){
        //-appending at end of the LSU
        //-so problem with delete -MAKE SURE to LOCK when deleting
        //LSTable is array of LS_Packets
-       LS_Packet *lss = LSTable;
+       LSA_Packet *lss = LSTable;
        ospf_LSU* routerLinksUp = lss->data;
        int nol = routerLinksUp->numOfLinks;
        
-       source[3] = 0;
+       source[0] = 0;//IP format is reverse. Converting to subnet address.
        for( i = 1; i <= netarray.count; i++ ){
-           if( memcmp( netarray.elem[i]->ip_addr, source, 3 ) == 0 ){
-               COPY_IP(routerLinksUp->links[nol].linkID, source);
-               COPY_IP(routerLinksUp->links[nol].linkData, netarray.elem[i]->ip_addr);
+           if( memcmp( netarray.elem[i]->ip_addr + 1, source + 1, 3 ) == 0 ){
+               COPY_IP(&(routerLinksUp->links[nol].linkID), source);
+               COPY_IP(&(routerLinksUp->links[nol].linkData), netarray.elem[i]->ip_addr);
+//             printf("Discovered edge between: %s and %s\n", IP2Dot( tmpbuf, source ), IP2Dot( tmpbuf2, netarray.elem[i]->ip_addr));
                break;
            }               
        }
        routerLinksUp->numOfLinks++;
        lss->linkSequenceNumber++;
-       lss->lsLength += sizeof(lnk);
+       lss->lsLength += (4 * 4);//16 bytes for each new link entry
+       //printf("%d", routerLinksUp[]);
        OSPFBroadcastLSU( );//send updated LSU to everyone
     }
 }
@@ -277,6 +281,106 @@ void *OSPFAlive(){
 void OSPFBroadcastLSU(){
     printf("\nLSU BROADCAST ROUND: %d\n", ++bcastLSUcnt);
     
+    char tmpbuf[MAX_TMPBUF_LEN], tmpbuf2[MAX_TMPBUF_LEN];
+    //Creating a General Packet to send to the IP Layer
+    gpacket_t *out_pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
+    //Assuming IP Packet starts at General Packet's data.data
+    ip_packet_t *ipkt = (ip_packet_t*) (out_pkt->data.data);
+    ipkt->ip_hdr_len = 5; // IP without header options
+    //Assuming OSPF Packet starts right after the IP Packet
+    ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
+    ospf_packet_t *tempp = getLSU();
+    //memcpy( opkt, tempp, tempp->messageLength * 4);
+    memcpy( opkt, tempp, sizeof(ospf_packet_t));
+    int i, j;
+    //SENDING to all interfaces [CURRENTLY regardless of UML or Router]
+    interface_t *ifptr;
+    ///////////////////////
+    /*LSA_Packet *lsp = opkt->data;
+    for( i = 0; i < LSTableSize; i++, lsp++ ){
+        ospf_LSU *lsu = lsp->data;
+        lnk *LList = lsu->links;
+        printf("OSPF.c BEFORE SENDING Link State ID: %s Number of Links: %d\n", IP2Dot(tmpbuf, lsp->advertRouterIp), lsu->numOfLinks );
+        for( j = 0; j < lsu->numOfLinks; j++, LList++ ){
+            printf("Edge between %s and %s\n", IP2Dot(tmpbuf, &(LList->linkID)), IP2Dot(tmpbuf2, &(LList->linkData)));
+        }
+        printf("\n");
+    }*/
+    //////////////////////
+    for( i = 1; i <= netarray.count; i++ ){
+        ifptr = netarray.elem[i];
+        if( ifptr == NULL ){ 
+            printf("NULL Interface Found\n");
+            continue;
+        }
+       COPY_IP(opkt->sourceIP, ifptr->ip_addr);
+       //printf("Sending LSU Packet to \n");
+       IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
+    }
+}
+
+/*void OSPFSendLSU( LS_Packet *lsp, uchar *dst_ip ){
+    char tmpBuff[MAX_TMPBUF_LEN];
+    //Creating a General Packet to send to the IP Layer
+    gpacket_t *out_pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
+    //Assuming IP Packet starts at General Packet's data.data
+    ip_packet_t *ipkt = (ip_packet_t*) (out_pkt->data.data);
+    ipkt->ip_hdr_len = 5; //IP without header options
+    //Assuming OSPF Packet starts right after the IP Packet
+    ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
+    
+    //The OSPF Packet "hello" is copied to the appropriate address of the General Packet
+    memcpy(opkt, lsp, lsp->lsLength * 4);
+    //The OSPF Packet's source IP has not previously been set. It's the interface's IP.
+    COPY_IP(opkt->sourceIP, dst_ip);
+    char tmpbuf[MAX_TMPBUF_LEN];
+    //printf("Sending HELLO to %s.\n", IP2Dot(tmpbuf, opkt->sourceIP));
+    //Not using checksum
+    //opkt->checksum = 0;
+    
+    //Sending the General Packet to the IP Layer
+    IPOutgoingPacket(out_pkt, dst_ip, opkt->messageLength, 2, OSPF_PROTOCOL);
+}*/
+
+void OSPFProcessLSU(ospf_packet_t *ospfhdr){
+    
+    LSA_Packet *lspkt = ospfhdr->data;
+    uint8_t source[4];
+    char tmpbuf[MAX_TMPBUF_LEN];
+    COPY_IP(source, ospfhdr->sourceIP);
+    printf("RECEIVED LSU from %s.\n", IP2Dot(tmpbuf, source));
+    
+    //return;
+    
+    ospf_LSU* newlinks = (ospf_LSU *) lspkt->data;
+    int i, found = 0;
+    LSA_Packet *lsp = (LSA_Packet *)LSTable;
+    //Go through list of current entries in LSTable
+    for ( i = 0; i < LSTableSize; ++i ){ //starts from 0 because this
+        //way it's easier to prevent using LSU originally sent out by self
+        lsp++;
+        if(COMPARE_IP(lsp->advertRouterIp, lspkt->advertRouterIp)==0){
+            if (lsp->linkSequenceNumber < lspkt->linkSequenceNumber){
+                memcpy( lsp, lspkt, sizeof(LSA_Packet) );
+                found = 1;
+                //OSPFForwardLSU( i );
+            }
+            else{
+                printf("LSU received OWN or OLD");
+                printf(" %s \n", IP2Dot( tmpbuf, source));                
+                return; //old LSU. Don't save, don't forward.
+            }
+        }
+    }
+    if( found == 0 ){//An LSU received from this router for the first time
+        LSTableSize++;
+        printf("LSTABLE SIZE INCREASED due to %s\n", IP2Dot(tmpbuf, lspkt->advertRouterIp));
+        memcpy( lsp, lspkt, sizeof(LSA_Packet) );
+        //OSPFForwardLSU( i );
+    }
+}
+
+void OSPFForwardLSU( int x ){
     char tmpBuff[MAX_TMPBUF_LEN];
     //Creating a General Packet to send to the IP Layer
     gpacket_t *out_pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
@@ -287,63 +391,7 @@ void OSPFBroadcastLSU(){
     ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
     
     memcpy( opkt, getLSU(), sizeof(ospf_packet_t));
-    int i;
-    //SENDING to all interfaces [CURRENTLY regardless of UML or Router]
-    interface_t *ifptr;
-    for( i = 1; i <= netarray.count; i++ ){
-        ifptr = netarray.elem[i];
-        if( ifptr == NULL ){ 
-            printf("NULL Interface Found\n");
-            continue;
-        }
-       COPY_IP(opkt->sourceIP, ifptr->ip_addr);
-       //printf("Sending LSU Packet to \n");
-       IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
-    }
-}
-
-void OSPFProcessLSU(ospf_packet_t *ospfhdr){
     
-    LS_Packet *lspkt = ospfhdr->data;
-    uint8_t source[4];
-    char tmpbuf[MAX_TMPBUF_LEN];
-    COPY_IP(source, ospfhdr->sourceIP);
-    printf("RECEIVED LSU from %s.\n", IP2Dot(tmpbuf, source));
-    ospf_LSU* newlinks = (ospf_LSU *) lspkt->data;
-    int i, found = 0;
-    LS_Packet *lsp = (LS_Packet *)LSTable;
-    //Go through list of current entries in LSTable
-    for ( i = 0; i < LSTableSize; ++i ){ //starts from 0 as this
-        //way it's easier to prevent using LSU originally sent out by self
-        lsp++;
-        if(COMPARE_IP(lsp->advertRouterIp, lspkt->advertRouterIp)==0){
-            if (lsp->linkSequenceNumber < lspkt->linkSequenceNumber){
-                memcpy( lsp, lspkt, sizeof(LS_Packet) );
-                found = 1;
-                //OSPFForwardLSU( i );
-            }
-            else{
-                printf("LSU received OWN or OLD\n");
-                return; //old LSU. Don't save, don't forward.
-            }
-            
-        }
-    }
-    if( found == 0 ){//An LSU received from this router for the first time
-        LSTableSize++;
-        printf("LSTABLE SIZE INCREASED\n");
-        memcpy( lsp, lspkt, sizeof(LS_Packet) );
-        //OSPFForwardLSU( i );
-    }
-}
-
-void OSPFForwardLSU( int i ){
-    //do jhamela
-    /*ospf_packet_t *opkt = getLSU();
-    LS_Packet *lsu =(LS_Packet *)(opkt->data);
-    LS_Packet *lsp = (LS_Packet *)LSTable;
-    memcpy(lsu, lsp + i, sizeof(LS_Packet));
-    opkt->messageLength = 4 + lsu->lsLength;
     int i;
     //SENDING to all interfaces [CURRENTLY regardless of UML or Router]
     interface_t *ifptr;
@@ -356,7 +404,7 @@ void OSPFForwardLSU( int i ){
        COPY_IP(opkt->sourceIP, ifptr->ip_addr);
        //printf("Sending LSU Packet to \n");
        IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
-    }*/
+    }
 }
 
 /*//printf("RECEIVED at OSPF ProcessHello.\n");
@@ -364,3 +412,18 @@ void OSPFForwardLSU( int i ){
     int iphdrlen = ipkt->ip_hdr_len *4;
     //Find the OSPF Packet location in General Packet
     ospf_packet_t *ospfhdr = (ospf_packet_t *)((uchar *)ipkt + iphdrlen);*/
+
+void printLSU(){
+    int i, j;
+    char tmpbuf[MAX_TMPBUF_LEN], tmpbuf2[MAX_TMPBUF_LEN];
+    LSA_Packet *lsp = (LSA_Packet *)LSTable;
+    for( i = 0; i < LSTableSize; i++, lsp++ ){
+        ospf_LSU *lsu = lsp->data;
+        lnk *LList = lsu->links;
+        printf("Link State ID: %s Number of Links: %d\n", IP2Dot(tmpbuf, lsp->advertRouterIp), lsu->numOfLinks );
+        for( j = 0; j < lsu->numOfLinks; j++, LList++ ){
+            printf("Edge between %s and %s\n", IP2Dot(tmpbuf, &(LList->linkID)), IP2Dot(tmpbuf2, &(LList->linkData)));
+        }
+        printf("\n");
+    }
+}

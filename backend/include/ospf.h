@@ -84,7 +84,7 @@ typedef struct ospf_LSU {
     lnk links[];
 }ospf_LSU;
 
-typedef struct LS_Packet {
+typedef struct LSA_Packet {
     uint16_t lsAge;
     uint16_t lsType;
     uint8_t linkStateId[4];
@@ -93,7 +93,7 @@ typedef struct LS_Packet {
     uint16_t lsChecksum;
     uint16_t lsLength;
     uint8_t data[DEFAULT_MTU-36-20]; //minus IP and OSPF header, minus LSA header. 
-}LS_Packet;
+}LSA_Packet;
 
 typedef struct routerNode{
     uint8_t ipAddress[4];
@@ -109,8 +109,8 @@ ospf_packet_t* getLSU();
 void OSPFProcess(gpacket_t *in_pkt);
 void OSPFProcessHello(ospf_packet_t *in_pkt);
 void *OSPFAlive();
-void LSUInit( LS_Packet *lsp );
+void LSUInit( LSA_Packet *lsp );
 void OSPFProcessLSU(ospf_packet_t *in_pkt);
 void OSPFBroadcastLSU();
 void OSPFForwardLSU( int i );
-void OSPFSendLSU( LS_Packet *lsp, uchar *dst_ip );
+void OSPFSendLSU( LSA_Packet *lsp, uchar *dst_ip );

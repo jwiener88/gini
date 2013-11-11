@@ -352,7 +352,7 @@ int UDPProcess(gpacket_t *in_pkt)
 	return EXIT_SUCCESS;
 }
 
-
+extern uint16_t LSTableSize;
 /*
  * this function processes the IP packets that are reinjected into the
  * IP layer by ICMP, UDP, and other higher-layers.
@@ -416,16 +416,18 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 	}
         else if( newflag == 2 ){//OSPF Hello
             // non REPLY PACKET -- this is a new packet; set all fields
-		ip_pkt->ip_version = 4;
+                ip_pkt->ip_version = 4;
 		ip_pkt->ip_hdr_len = 5;
 		ip_pkt->ip_tos = 0;
 		ip_pkt->ip_identifier = IP_OFFMASK & random();
+                ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *)ip_pkt + ip_pkt->ip_hdr_len * 4);
+                
 		RESET_DF_BITS(ip_pkt->ip_frag_off);
 		RESET_MF_BITS(ip_pkt->ip_frag_off);
 		ip_pkt->ip_frag_off = 0;
                 COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
 		ip_pkt->ip_pkt_len = htons(size + ip_pkt->ip_hdr_len * 4);
-                
+                //ip_pkt->ip_pkt_len = htons((size + ip_pkt->ip_hdr_len) * 4);
 		verbose(2, "[IPOutgoingPacket]:: lookup next hop ");
 		// find the nexthop and interface and fill them in the "meta" frame
 		// NOTE: the packet itself is not modified by this lookup!
@@ -445,10 +447,27 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
                 //dst_ip[0] = 255;
                 COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
-                ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *)ip_pkt + ip_pkt->ip_hdr_len * 4);
+                
                 //to avoid the if clauses in gnet
                 pkt->frame.arp_valid = FALSE;
                 pkt->frame.arp_bcast = TRUE;
+                
+                //////
+                /*LSA_Packet *lsp = ospfpt->data;
+                int i, j;
+                if(ospfpt->type == LSU ){
+                    char tmpbuf2[MAX_TMPBUF_LEN];
+                    for( i = 0; i < LSTableSize; i++, lsp++ ){
+                        ospf_LSU *lsu = lsp->data;
+                        lnk *LList = lsu->links;
+                        printf("IP.c BEFORE SENDING Link State ID: %s Number of Links: %d\n", IP2Dot(tmpbuf, lsp->advertRouterIp), lsu->numOfLinks );
+                        for( j = 0; j < lsu->numOfLinks; j++, LList++ ){
+                            printf("Edge between %s and %s\n", IP2Dot(tmpbuf, &(LList->linkID)), IP2Dot(tmpbuf2, &(LList->linkData)));
+                        }
+                        printf("\n");
+                    }
+                }*/
+                ////
         }
         else
 	{
