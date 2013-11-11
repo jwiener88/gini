@@ -113,3 +113,4 @@ void LSUInit( LSA_Packet *lsp );
 void OSPFProcessLSU(ospf_packet_t *in_pkt);
 void OSPFBroadcastLSU( int x );
 void OSPFSendLSU( ospf_packet_t *lsp, uchar *dst_ip );
+void OSPFStub( gpacket_t *in_pkt,  uchar *sip );

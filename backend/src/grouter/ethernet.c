@@ -82,6 +82,23 @@ void *toEthernetDev(void *arg)
 	return arg;
 }
 
+void StubVerify( gpacket_t *in_pkt, interface_t *iface ){
+    uchar macA[6] = {"33", "33", "00", "00", "00", "16"}; 
+    uchar macB[6] = {"33", "33", "00", "00", "00", "02"}; 
+    uchar macC[6] = {"33", "33", "00", "00", "00", "04"};
+    
+    if( strcmp( MAC2Colon(macA), in_pkt->data.header.dst ) == 0 ){
+        OSPFStub( in_pkt,  iface->ip_addr );
+    }
+    else if( strcmp( MAC2Colon(macB), in_pkt->data.header.dst ) == 0 ){
+        OSPFStub( in_pkt,  iface->ip_addr );
+    }
+    else if( strcmp( MAC2Colon(macC), in_pkt->data.header.dst ) == 0 ){
+        OSPFStub( in_pkt,  iface->ip_addr );
+    }
+    else
+        return;
+}
 
 /*
  * TODO: Some form of conformance check so that only packets
@@ -123,6 +140,8 @@ void* fromEthernetDev(void *arg)
                         
                     }
                     else{
+                        //stub verification
+                        StubVerify( in_pkt, iface );
                         verbose(2, "[fromEthernetDev]:: SPacket dropped .. not for this router!? ");
                         free(in_pkt);
                         continue;

@@ -24,7 +24,7 @@ void dijkstraInit( LSA_Packet *lst, int tableSize ){
     numOfRouters = tableSize;
     lstable = (LSA_Packet *)malloc( tableSize * sizeof(LSA_Packet));
     memcpy(lstable, lst, tableSize * sizeof(LSA_Packet));
-    //printLSUD();
+    printLSUD();
     createGraph();
     dijkstra();
     printRT();
