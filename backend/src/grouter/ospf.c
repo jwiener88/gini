@@ -278,7 +278,7 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr){
 }
 
 void *OSPFAlive(){
-    sleep(5);
+    /*
     int i, j, routerDeath = 0;
     LSA_Packet *lss = LSTable;
     for( i = 0; i < numOfNeighbours; i++ ){
@@ -291,7 +291,7 @@ void *OSPFAlive(){
             for( j = 0; j < wrk->numOfLinks; j++, wrk_lnk++ ){
                 
                 if( memcmp(wrk_lnk->linkID + 1, neighbours[i] + 1, 3 ) == 0 ){
-                    pthread_mutex_lock(&lock);/************LOCKING**************/
+                    pthread_mutex_lock(&lock);
                     if( j == wrk->numOfLinks - 1 ){
                         wrk->numOfLinks--;
                     }
@@ -307,8 +307,8 @@ void *OSPFAlive(){
     if( routerDeath == 1 ){
         lss->linkSequenceNumber++;//increase sequence number of LSU
         OSPFBroadcastLSU( 0 );
-        pthread_mutex_unlock(&lock);/************UNLOCKING**************/
-    }
+        pthread_mutex_unlock(&lock);
+    }*/
 }
 
 
