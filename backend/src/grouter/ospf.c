@@ -286,12 +286,17 @@ void *OSPFAlive(){
             for( j = 0; j < wrk->numOfLinks; j++, wrk_lnk++ ){
                 
                 if( memcmp(wrk_lnk->linkID + 1, neighbours[i] + 1, 3 ) == 0 ){
-                    if( j == wrk->numOfLinks - 1 ){
+                    if( j == wrk->numOfLinks - 1 ){//when item is last element in LSU link list
                         wrk->numOfLinks--;
+                        numOfNeighbours--;
                     }
-                    else{
+                    else{//when item is in the middle somewhere
                         memcpy( wrk_lnk, &(wrk->links[wrk->numOfLinks - 1]), sizeof(lnk) );
+                        memcpy( neighbours[j], neighbours[wrk->numOfLinks - 1], 4);
+                        aliveVal[j] = aliveVal[wrk->numOfLinks - 1];
                         wrk->numOfLinks--;
+                        numOfNeighbours--;
+                        //copied last item to current item position and decremented size of list
                     }
                     break;
                 }
