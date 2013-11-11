@@ -36,7 +36,7 @@ void OSPFinit() {
     pthread_mutex_init(&lock, NULL);
     LSUInit( LSTable );
     thread_stat1 = pthread_create(&(threadid1), NULL, (void *)OSPFBroadcastHello, (void *)NULL);
-    //thread_stat2 = pthread_create(&(threadid2), NULL, (void *)OSPFAlive, (void *)NULL);
+    thread_stat2 = pthread_create(&(threadid2), NULL, (void *)OSPFAlive, (void *)NULL);
 }
 
 void LSUInit( LSA_Packet *lsp ){
@@ -193,11 +193,6 @@ void OSPFProcess(gpacket_t *in_pkt) {
     ip_packet_t *ip_pkt = (ip_packet_t *) in_pkt->data.data;
     ospf_packet_t *ospf_hdr = (ospf_packet_t *) ((uchar *) ip_pkt + ip_pkt->ip_hdr_len * 4);
     char tmpbuf[MAX_TMPBUF_LEN];
-    //printf("RECEIVED HELLO from %s.\n", IP2Dot(tmpbuf, ospf_hdr->sourceIP));
-    //printf("Received OSPF Type: %d\n", ospf_hdr->type );
-    //printf("Received OSPF Version: %d\n", ospf_hdr->version );
-    //printf("RECEIVED HELLO from %s.\n", IP2Dot(tmpbuf, ospf_hdr->sourceIP));
-    //return;
     switch (ospf_hdr->type) {
         case HELLO:
             pthread_mutex_lock(&lock);/************LOCKING**************/
@@ -278,9 +273,9 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr){
 }
 
 void *OSPFAlive(){
-    /*
     int i, j, routerDeath = 0;
     LSA_Packet *lss = LSTable;
+    pthread_mutex_lock(&lock);
     for( i = 0; i < numOfNeighbours; i++ ){
         aliveVal[i] -= 5;
         if (aliveVal[i] <= 0){
@@ -291,12 +286,11 @@ void *OSPFAlive(){
             for( j = 0; j < wrk->numOfLinks; j++, wrk_lnk++ ){
                 
                 if( memcmp(wrk_lnk->linkID + 1, neighbours[i] + 1, 3 ) == 0 ){
-                    pthread_mutex_lock(&lock);
                     if( j == wrk->numOfLinks - 1 ){
                         wrk->numOfLinks--;
                     }
                     else{
-                        memcpy( wrk_lnk, wrk->links[wrk->numOfLinks - 1], sizeof(lnk) );
+                        memcpy( wrk_lnk, &(wrk->links[wrk->numOfLinks - 1]), sizeof(lnk) );
                         wrk->numOfLinks--;
                     }
                     break;
@@ -307,8 +301,8 @@ void *OSPFAlive(){
     if( routerDeath == 1 ){
         lss->linkSequenceNumber++;//increase sequence number of LSU
         OSPFBroadcastLSU( 0 );
-        pthread_mutex_unlock(&lock);
-    }*/
+    }
+    pthread_mutex_unlock(&lock);
 }
 
 
@@ -398,7 +392,6 @@ void OSPFProcessLSU(ospf_packet_t *ospfhdr){
             if (lsp->linkSequenceNumber < lspkt->linkSequenceNumber){
                 memcpy( lsp, lspkt, sizeof(LSA_Packet) );
                 found = 1;
-                //OSPFForwardLSU( i );
                 OSPFBroadcastLSU( i );
             }
             else{
@@ -415,39 +408,6 @@ void OSPFProcessLSU(ospf_packet_t *ospfhdr){
         OSPFBroadcastLSU( i );
     }
 }
-
-void OSPFForwardLSU( int x ){
-    char tmpBuff[MAX_TMPBUF_LEN];
-    //Creating a General Packet to send to the IP Layer
-    gpacket_t *out_pkt = (gpacket_t*) malloc(sizeof (gpacket_t));
-    //Assuming IP Packet starts at General Packet's data.data
-    ip_packet_t *ipkt = (ip_packet_t*) (out_pkt->data.data);
-    ipkt->ip_hdr_len = 5; // IP without header options
-    //Assuming OSPF Packet starts right after the IP Packet
-    ospf_packet_t *opkt = (ospf_packet_t *) ((uchar *) ipkt + ipkt->ip_hdr_len * 4);
-    
-    memcpy( opkt, getLSU( 0 ), sizeof(ospf_packet_t));
-    
-    int i;
-    //SENDING to all interfaces [CURRENTLY regardless of UML or Router]
-    interface_t *ifptr;
-    for( i = 1; i <= netarray.count; i++ ){
-        ifptr = netarray.elem[i];
-        if( ifptr == NULL ){ 
-            printf("NULL Interface Found\n");
-            continue;
-        }
-       COPY_IP(opkt->sourceIP, ifptr->ip_addr);
-       //printf("Sending LSU Packet to \n");
-       IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
-    }
-}
-
-/*//printf("RECEIVED at OSPF ProcessHello.\n");
-    ip_packet_t *ipkt = (ip_packet_t *)in_pkt->data.data;
-    int iphdrlen = ipkt->ip_hdr_len *4;
-    //Find the OSPF Packet location in General Packet
-    ospf_packet_t *ospfhdr = (ospf_packet_t *)((uchar *)ipkt + iphdrlen);*/
 
 void printLSU(){
     int i, j;

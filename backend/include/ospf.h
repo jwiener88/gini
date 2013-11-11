@@ -112,5 +112,4 @@ void *OSPFAlive();
 void LSUInit( LSA_Packet *lsp );
 void OSPFProcessLSU(ospf_packet_t *in_pkt);
 void OSPFBroadcastLSU( int x );
-void OSPFForwardLSU( int i );
 void OSPFSendLSU( ospf_packet_t *lsp, uchar *dst_ip );
