@@ -201,7 +201,7 @@ void OSPFProcess(gpacket_t *in_pkt) {
     switch (ospf_hdr->type) {
         case HELLO:
             pthread_mutex_lock(&lock);/************LOCKING**************/
-            OSPFProcessHello(ospf_hdr); //TODO: implemnt this function.
+            OSPFProcessHello(ospf_hdr);
             pthread_mutex_unlock(&lock);/************UNLOCKING**************/
             break;
         case LSU:
@@ -278,14 +278,36 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr){
 }
 
 void *OSPFAlive(){
-    sleep(4);
-    int i;
+    sleep(5);
+    int i, j, routerDeath = 0;
+    LSA_Packet *lss = LSTable;
     for( i = 0; i < numOfNeighbours; i++ ){
         aliveVal[i] -= 5;
         if (aliveVal[i] <= 0){
             aliveVal[i] = 0;
-            //TODO: SEND LSU.
-        }
+            routerDeath = 1;
+            ospf_LSU *wrk = (ospf_LSU *)lss->data;
+            lnk *wrk_lnk = (lnk *)wrk->links;
+            for( j = 0; j < wrk->numOfLinks; j++, wrk_lnk++ ){
+                
+                if( memcmp(wrk_lnk->linkID + 1, neighbours[i] + 1, 3 ) == 0 ){
+                    pthread_mutex_lock(&lock);/************LOCKING**************/
+                    if( j == wrk->numOfLinks - 1 ){
+                        wrk->numOfLinks--;
+                    }
+                    else{
+                        memcpy( wrk_lnk, wrk->links[wrk->numOfLinks - 1], sizeof(lnk) );
+                        wrk->numOfLinks--;
+                    }
+                    break;
+                }
+            }
+         }
+     }
+    if( routerDeath == 1 ){
+        lss->linkSequenceNumber++;//increase sequence number of LSU
+        OSPFBroadcastLSU( 0 );
+        pthread_mutex_unlock(&lock);/************UNLOCKING**************/
     }
 }
 
@@ -328,7 +350,6 @@ void OSPFBroadcastLSU( int x ){
        //IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
        OSPFSendLSU( opkt, ifptr->ip_addr );
        //printf("SENT %d\n", i);
-       //sleep(10);
     }
     //pthread_mutex_unlock(&lock);
 }
