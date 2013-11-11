@@ -348,7 +348,7 @@ int IPProcessMyPacket(gpacket_t *in_pkt)
  */
 int UDPProcess(gpacket_t *in_pkt)
 {
-	verbose(2, "[UDPProcess]:: packet received for processing.. NOT YET IMPLEMENTED!! ");
+	verbose(1, "[UDPProcess]:: packet received for processing.. NOT YET IMPLEMENTED!! ");
 	return EXIT_SUCCESS;
 }
 
