@@ -327,7 +327,7 @@ void OSPFBroadcastLSU( int x ){
         }
        //IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
        OSPFSendLSU( opkt, ifptr->ip_addr );
-       printf("SENT %d\n", i);
+       //printf("SENT %d\n", i);
        //sleep(10);
     }
     //pthread_mutex_unlock(&lock);
@@ -382,7 +382,7 @@ void OSPFProcessLSU(ospf_packet_t *ospfhdr){
             }
             else{
                 printf("LSU received OWN or OLD");
-                printf(" %s \n", IP2Dot( tmpbuf, source));                
+                printf("from %s \n", IP2Dot( tmpbuf, source));                
                 return; //old LSU. Don't save, don't forward.
             }
         }
