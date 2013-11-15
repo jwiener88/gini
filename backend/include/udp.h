@@ -1,9 +1,14 @@
 #include "mtu.h"
 #include "ip.h"
 
-//useful reference: http://medusa.sdsu.edu/network/CS576/Lectures/ch11_UDP.pdf
+
+#define PCBTABLESIZE 25
+#define FREE 0
+#define IN_USE 1 
 
 typedef struct udp_pkt_t {
+//useful reference: http://medusa.sdsu.edu/network/CS576/Lectures/ch11_UDP.pdf
+
     uint16_t source_port;
     uint16_t dest_port;
     uint16_t length;
@@ -23,7 +28,10 @@ typedef struct udp_psuedo_header_t{
 }udp_pseudo_header;
 
 typedef struct pcb_t{
-    uint16_t local_port;
+    uint16_t type;
+    uint16_t process_id;
+    uint16_t port;
+    uint16_t queue_number;
     
     
 }pcb_t;
