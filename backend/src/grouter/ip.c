@@ -13,11 +13,12 @@
 #include "ip.h"
 #include "fragment.h"
 #include "packetcore.h"
+#include "udp.h"
 #include <stdlib.h>
 #include <slack/err.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "ospf.h"
+//#include "ospf.h"
 
 route_entry_t route_tbl[MAX_ROUTES]; // routing table
 mtu_entry_t MTU_tbl[MAX_MTU]; // MTU table
@@ -378,42 +379,7 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
             udp_pkt->checksum = htons(cksum);
         }
         verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
-    } else if (newflag == 2) {//OSPF Hello
-        // non REPLY PACKET -- this is a new packet; set all fields
-        ip_pkt->ip_version = 4;
-        ip_pkt->ip_hdr_len = 5;
-        ip_pkt->ip_tos = 0;
-        ip_pkt->ip_identifier = IP_OFFMASK & random();
-        RESET_DF_BITS(ip_pkt->ip_frag_off);
-        RESET_MF_BITS(ip_pkt->ip_frag_off);
-        ip_pkt->ip_frag_off = 0;
-        COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
-        ip_pkt->ip_pkt_len = htons(size + ip_pkt->ip_hdr_len * 4);
-
-        verbose(2, "[IPOutgoingPacket]:: lookup next hop ");
-        // find the nexthop and interface and fill them in the "meta" frame
-        // NOTE: the packet itself is not modified by this lookup!
-        if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst),
-                pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE) {
-            //return EXIT_FAILURE;
-        }
-
-        verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
-        // lookup the IP address of the destination interface..
-        if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
-                iface_ip_addr)) == EXIT_FAILURE) {
-            //return EXIT_FAILURE;
-        }
-        // the outgoing packet should have the interface IP as source
-        COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, iface_ip_addr));
-        verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
-        //dst_ip[0] = 255;
-        COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
-        ospf_packet_t *ospfpt = (ospf_packet_t *) ((uchar *) ip_pkt + ip_pkt->ip_hdr_len * 4);
-        //to avoid the if clauses in gnet
-        pkt->frame.arp_valid = FALSE;
-        pkt->frame.arp_bcast = TRUE;
-    } else {
+    }  else {
         error("[IPOutgoingPacket]:: unknown outgoing packet action.. packet discarded ");
         return EXIT_FAILURE;
     }
