@@ -36,6 +36,7 @@ typedef struct pcb_t{
     
 }pcb_t;
 
+void UDPinit();
 int sendUDPpacket(gpacket_t *gPckt, uint8_t destIP[], uint16_t destport, uint16_t localport, char* message, int len); 
 int newSocket(int type);
 int bindSocket(int sockid, int port);

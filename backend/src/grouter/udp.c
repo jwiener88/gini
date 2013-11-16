@@ -19,11 +19,12 @@ int queues;
  * Creates all of the static structures required for UDP. 
  * 
  */
-void init() {
+void UDPinit() {
     int i;
-    queues = 0;
+    queues = 1;
     for (i = 0; i < PCBTABLESIZE; ++i) {
         PCBtable[i].status = FREE;
+        PCBtable[i].queue_number = 0;
     }
 
 }
