@@ -367,8 +367,8 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
         if (ip_pkt->ip_prot == UDP_PROTOCOL) {
             udp_pkt_t *udp_pkt = (udp_pkt_t *) ((uchar *) ip_pkt + ip_pkt->ip_hdr_len * 4);
             udp_psuedo_header_t *psuedo = malloc(sizeof (udp_psuedo_header_t));
-            COPY_IP(psuedo->dest_ip, destIP);
-            COPY_IP(psuedo->source_ip, ipkt->ip_src);
+            COPY_IP(psuedo->dest_ip, ip_pkt->destIP); 
+            COPY_IP(psuedo->source_ip, ip_pkt->ip_src);
             psuedo->protocol = ip_pkt->ip_prot;
             psuedo->pkt = udp_pkt;
             psuedo->udp_length = udp_pkt->length;
