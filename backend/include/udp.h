@@ -6,7 +6,7 @@
 #define FREE 0
 #define IN_USE 1 
 
-typedef struct udp_pkt_t {
+typedef struct udp_pkt {
 //useful reference: http://medusa.sdsu.edu/network/CS576/Lectures/ch11_UDP.pdf
 
     uint16_t source_port;
