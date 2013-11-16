@@ -28,7 +28,7 @@ typedef struct udp_psuedo_header_t{
 }udp_pseudo_header;
 
 typedef struct pcb_t{
-    uint16_t type;
+    uint16_t status;
     uint16_t process_id;
     uint16_t port;
     uint16_t queue_number;
@@ -36,7 +36,9 @@ typedef struct pcb_t{
     
 }pcb_t;
 
+int sendUDPpacket(gpacket_t *gPckt, uint8_t destIP[], uint16_t destport, uint16_t localport, char* message, int len); 
 int socket(int type);
 int bind(int sockid, int port);
-int sendto(int sockid, int destip, int dport, char *message, int len);
+int sendto(int sockid, uint8_t *destip, int dport, char *message, int len);
 int recvfrom(int sockid, int *srcip, int *sport, char **message, int len);
+int UDPprocessPacket(gpacket_t *in_pkt);

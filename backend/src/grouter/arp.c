@@ -25,7 +25,6 @@ arp_buffer_entry_t ARPbuffer[MAX_ARP_BUFFERS];   	// ARP buffer for unresolved p
 
 extern pktcore_t *pcore;
 
-
 void ARPInit()
 {
 	gpacket_t in_pkt;
