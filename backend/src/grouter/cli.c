@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "ospf.h"
+//#include "ospf.h"
 
 Map *cli_map;
 Mapper *cli_mapper;
@@ -123,7 +123,7 @@ void *CLIProcessCmdsInteractive(void *arg)
 {
 	FILE *fp = (FILE *)arg;
 	CLIPrintHelpPreamble();
-        OSPFinit();
+   //     OSPFinit();
         CLIProcessCmds(fp, 1);
 }
 
