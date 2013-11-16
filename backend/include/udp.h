@@ -13,7 +13,7 @@ typedef struct udp_pkt {
     uint16_t dest_port;
     uint16_t length;
     uint16_t checksum;
-    uint8_t data[MAX_MTU-7*4]; //remaining size after IP header (no options)
+    uint8_t data[DEFAULT_MTU-7*4]; //remaining size after IP header (no options)
 }udp_pkt_t;
 
 
