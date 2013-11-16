@@ -11,6 +11,7 @@
 #define __IP_H_
 
 #include "grouter.h"
+#include "message.h"
 #include <stdint.h>
 #include <endian.h>
 
