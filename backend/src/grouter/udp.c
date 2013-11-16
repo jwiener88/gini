@@ -7,6 +7,7 @@
 #include "message.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 
@@ -39,7 +40,7 @@ int sendUDPpacket(gpacket_t *gPckt, uint8_t destIP[], uint16_t destport, uint16_
     udp_datagram->source_port = localport;
     udp_datagram->dest_port = destport;
     udp_datagram->checksum = 0;
-    udp_datagram->data = message; //the data's pointer now points to the message. 
+    memcpy(udp_datagram->data, message, len);
 
 
     while (len % 4 != 0)
@@ -93,7 +94,7 @@ int UDPsendto(int sockid, uint8_t *destip, int dport, char *message, int len) {
 }
 
 int UDPrecvfrom(int sockid, int *srcip, int *sport, char **message, int len) {
-    pcb_t *pcb = PCBtable[sockid];
+    pcb_t *pcb = &PCBtable[sockid];
     int queue = pcb->queue_number;
     if(queue == 0){
         queue = queues++;
@@ -113,9 +114,9 @@ int UDPProcess(gpacket_t *in_pkt) {
     int iphdrlen = ip_pkt->ip_hdr_len * 4;
     udp_pkt_t *udp_pkt = (udp_pkt_t *) ((uchar *) ip_pkt + iphdrlen);
     //create pesuedo header.
-    udp_psuedo_header_t *psuedo = malloc(sizeof (udp_psuedo_header_t));
-    COPY_IP(psuedo->dest_ip, destIP);
-    COPY_IP(psuedo->source_ip, ipkt->ip_src);
+    udp_pseudo_header_t *psuedo = malloc(sizeof (udp_pseudo_header_t));
+    COPY_IP(psuedo->dest_ip, ip_pkt->ip_dst);
+    COPY_IP(psuedo->source_ip, ip_pkt->ip_src);
     psuedo->protocol = ip_pkt->ip_prot;
     psuedo->pkt = udp_pkt;
     psuedo->udp_length = udp_pkt->length;
