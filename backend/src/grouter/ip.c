@@ -370,7 +370,7 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
             COPY_IP(psuedo->dest_ip, ip_pkt->ip_dst); 
             COPY_IP(psuedo->source_ip, ip_pkt->ip_src);
             psuedo->protocol = ip_pkt->ip_prot;
-            psuedo->pkt = *udp_pkt;
+            psuedo->pkt = udp_pkt;
             psuedo->udp_length = udp_pkt->length;
             cksum = checksum((uchar *)psuedo, (udp_pkt->length + 12)/2); // size = payload (given) + icmp_header
             psuedo->pkt = (udp_pkt_t *) NULL;
