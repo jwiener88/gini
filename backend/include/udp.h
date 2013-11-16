@@ -25,7 +25,7 @@ typedef struct udp_psuedo_header_t{
     uint8_t protocol; //IP protocol
     uint16_t udp_length; //length of datagram
     udp_pkt_t pkt; //the packet we are interested in. 
-}udp_pseudo_header;
+}udp_pseudo_header_t;
 
 typedef struct pcb_t{
     uint16_t status;
