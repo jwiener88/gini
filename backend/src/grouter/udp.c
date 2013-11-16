@@ -44,7 +44,7 @@ int sendUDPpacket(gpacket_t *gPckt, uint8_t destIP[], uint16_t destport, uint16_
 
 
     while (len % 4 != 0)
-        udp_datagram->data + len++ = 0; //pad with 0s. 
+        *(udp_datagram->data + len++) = 0; //pad with 0s. 
 
     udp_datagram->length = len + 8; //8 byte header + len characters. 
 
@@ -100,7 +100,7 @@ int UDPrecvfrom(int sockid, int *srcip, int *sport, char **message, int len) {
         queue = queues++;
         queueList[queue] = createSimpleQueue("",0,FALSE,FALSE);
     }
-    writeQueue(queue, message);
+    writeQueue(queue, message, len);
     
     return len;
 }
