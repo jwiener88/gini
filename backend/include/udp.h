@@ -37,8 +37,8 @@ typedef struct pcb_t{
 }pcb_t;
 
 int sendUDPpacket(gpacket_t *gPckt, uint8_t destIP[], uint16_t destport, uint16_t localport, char* message, int len); 
-int socket(int type);
-int bind(int sockid, int port);
-int sendto(int sockid, uint8_t *destip, int dport, char *message, int len);
-int recvfrom(int sockid, int *srcip, int *sport, char **message, int len);
+int newSocket(int type);
+int bindSocket(int sockid, int port);
+int UDPsendto(int sockid, uint8_t *destip, int dport, char *message, int len);
+int UDPrecvfrom(int sockid, int *srcip, int *sport, char **message, int len);
 int UDPprocessPacket(gpacket_t *in_pkt);

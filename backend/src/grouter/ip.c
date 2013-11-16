@@ -373,7 +373,7 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
             psuedo->pkt = *udp_pkt;
             psuedo->udp_length = udp_pkt->length;
             cksum = checksum((uchar *)psuedo, (udp_pkt->length + 12)/2); // size = payload (given) + icmp_header
-            psuedo->pkt = (*udp_pkt_t) NULL;
+            psuedo->pkt = (udp_pkt_t *) NULL;
             free(psuedo);
             
             udp_pkt->checksum = htons(cksum);

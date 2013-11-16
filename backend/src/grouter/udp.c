@@ -57,7 +57,7 @@ int sendUDPpacket(gpacket_t *gPckt, uint8_t destIP[], uint16_t destport, uint16_
  * Creates a socket item, and returns an index to the PCB array. 
  * @param 
  */
-int socket(int type) {
+int newSocket(int type) {
     int i;
     if (type == 1) {
         for (i = 0; i < PCBTABLESIZE; ++i) {
@@ -74,7 +74,7 @@ int socket(int type) {
     return -1;
 }
 
-int bind(int sockid, int port) {
+int bindSocket(int sockid, int port) {
     if (PCBtable[sockid].port == 0) {
         PCBtable[sockid].port = port;
         return EXIT_SUCCESS;
@@ -83,14 +83,14 @@ int bind(int sockid, int port) {
     }
 }
 
-int sendto(int sockid, uint8_t *destip, int dport, char *message, int len) {
+int UDPsendto(int sockid, uint8_t *destip, int dport, char *message, int len) {
     gpacket_t *gpckt = malloc(sizeof (gpacket_t)); //create a general packet
     sendUDPpacket(gpckt, destip, dport, PCBtable[sockid].port, message, len);
 
     return len;
 }
 
-int recvfrom(int sockid, int *srcip, int *sport, char **message, int len) {
+int UDPrecvfrom(int sockid, int *srcip, int *sport, char **message, int len) {
     pcb_t *pcb = PCBtable[sockid];
     int queue = pcb->queue_number;
     if(queue == 0){
@@ -125,7 +125,7 @@ int UDPProcess(gpacket_t *in_pkt) {
         for (i = 0; i < PCBTABLESIZE; i++) {
             if (PCBtable[i].port == udp_pkt->dest_port) {
                 sockid = i;
-                return recvfrom(sockid, ip_pkt->ip_src, udp_pkt->source_port, udp_pkt->data, udp_pkt->length);
+                return UDPrecvfrom(sockid, ip_pkt->ip_src, udp_pkt->source_port, udp_pkt->data, udp_pkt->length);
             }
         }
     }
