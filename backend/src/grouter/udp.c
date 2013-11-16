@@ -3,6 +3,8 @@
 #include "ip.h"
 #include "protocols.h"
 #include "simplequeue.h"
+#include "grouter.h"
+#include "message.h"
 #include <stdio.h>
 #include <stdlib.h>
 
