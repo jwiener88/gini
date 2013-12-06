@@ -1,3 +1,7 @@
+/*Authors:
+ Muntasir Chowdhury
+ Jason Wiener
+ */
 #include <slack/err.h>
 #include <netinet/in.h>
 #include <string.h>
@@ -67,13 +71,13 @@ void *OSPFBroadcastHello() {
             uchar *ipp = &(neighbours[i]);
             printf("%s\n", IP2Dot(tmpbuf, ipp));
         }
-        printf("\nBROADCAST ROUND: %d, Number of interfaces: %d\n", ++count, netarray.count);
+        //printf("\nBROADCAST ROUND: %d, Number of interfaces: %d\n", ++count, netarray.count);
         //printLSU();
         interface_t *ifptr;
         for (i = 1; i <= netarray.count; i++) {
             ifptr = netarray.elem[i];
             if (ifptr == NULL) {
-                printf("NULL Interface Found\n");
+                //printf("NULL Interface Found\n");
                 continue;
             }
             //COPY_IP
@@ -222,7 +226,7 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr) {
     uint8_t source[4];
     char tmpbuf[MAX_TMPBUF_LEN], tmpbuf2[MAX_TMPBUF_LEN];
     COPY_IP(source, ospfhdr->sourceIP);
-    printf("RECEIVED HELLO from %s.\n", IP2Dot(tmpbuf, source));
+    //printf("RECEIVED HELLO from %s.\n", IP2Dot(tmpbuf, source));
     int i, isKnownNeighbour = 0;
     if (numOfNeighbours == 0) {
         COPY_IP(neighbours[numOfNeighbours], source);
@@ -275,7 +279,7 @@ void OSPFProcessHello(ospf_packet_t *ospfhdr) {
 
 void *OSPFAlive() {
     while (1) {
-        printf("Decreasing alive list\n");
+        //printf("Decreasing alive list\n");
         int i, j, routerDeath = 0;
         LSA_Packet *lss = LSTable;
         pthread_mutex_lock(&lock);
@@ -320,7 +324,7 @@ void *OSPFAlive() {
 }
 
 void OSPFBroadcastLSU(int x) {
-    printf("\nLSU BROADCAST ROUND: %d\n", ++bcastLSUcnt);
+    //printf("\nLSU BROADCAST ROUND: %d\n", ++bcastLSUcnt);
     //pthread_mutex_lock(&lock);
     char tmpbuf[MAX_TMPBUF_LEN], tmpbuf2[MAX_TMPBUF_LEN];
     //Creating a General Packet to send to the IP Layer
@@ -341,7 +345,7 @@ void OSPFBroadcastLSU(int x) {
     for (i = 1; i <= netarray.count; i++) {
         ifptr = netarray.elem[i];
         if (ifptr == NULL || ifptr->state == INTERFACE_DOWN) {
-            printf("NULL or DOWN Interface Found\n");
+            //printf("NULL or DOWN Interface Found\n");
             continue;
         }
         int found = 0;
@@ -350,7 +354,7 @@ void OSPFBroadcastLSU(int x) {
                 found = 1;
         }
         if (found == 0) {
-            printf("NOT yet a neighbour.\n");
+            //printf("NOT yet a neighbour.\n");
             continue;
         }
         //IPOutgoingPacket(out_pkt, ifptr->ip_addr, opkt->messageLength, 2, OSPF_PROTOCOL);
@@ -389,7 +393,7 @@ void OSPFProcessLSU(ospf_packet_t *ospfhdr) {
     uint8_t source[4];
     char tmpbuf[MAX_TMPBUF_LEN];
     COPY_IP(source, ospfhdr->sourceIP);
-    printf("RECEIVED LSU from %s.\n", IP2Dot(tmpbuf, source));
+    //printf("RECEIVED LSU from %s.\n", IP2Dot(tmpbuf, source));
 
     //return;
 
@@ -406,15 +410,15 @@ void OSPFProcessLSU(ospf_packet_t *ospfhdr) {
                 found = 1;
                 OSPFBroadcastLSU(i);
             } else {
-                printf("LSU received OWN or OLD");
-                printf("from %s \n", IP2Dot(tmpbuf, source));
+                //printf("LSU received OWN or OLD");
+                //printf("from %s \n", IP2Dot(tmpbuf, source));
                 return; //old LSU. Don't save, don't forward.
             }
         }
     }
     if (found == 0) {//An LSU received from this router for the first time
         LSTableSize++;
-        printf("LSTABLE SIZE INCREASED due to %s\n", IP2Dot(tmpbuf, lspkt->advertRouterIp));
+        //printf("LSTABLE SIZE INCREASED due to %s\n", IP2Dot(tmpbuf, lspkt->advertRouterIp));
         memcpy(lsp, lspkt, sizeof (LSA_Packet));
         OSPFBroadcastLSU(i);
     }

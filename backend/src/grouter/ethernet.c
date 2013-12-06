@@ -83,21 +83,21 @@ void *toEthernetDev(void *arg)
 }
 
 void StubVerify( gpacket_t *in_pkt, interface_t *iface ){
-    uchar macA[6] = {"33", "33", "00", "00", "00", "16"}; 
-    uchar macB[6] = {"33", "33", "00", "00", "00", "02"}; 
-    uchar macC[6] = {"33", "33", "00", "00", "00", "04"};
-    
-    if( strcmp( MAC2Colon(macA), in_pkt->data.header.dst ) == 0 ){
+    uchar macA[6] = {51, 51, 0, 0, 0, 22 }; 
+    uchar macB[6] = {51, 51, 0, 0, 0, 6 }; 
+    uchar macC[6] = {51, 51, 0, 0, 0, 4 }; 
+    /*
+    if( strcmp( MAC2Colon(macA), MAC2Colon(in_pkt->data.header.dst) ) == 0 ){
         OSPFStub( in_pkt,  iface->ip_addr );
     }
-    else if( strcmp( MAC2Colon(macB), in_pkt->data.header.dst ) == 0 ){
+    else if( strcmp( MAC2Colon(macB), MAC2Colon(in_pkt->data.header.dst) ) == 0 ){
         OSPFStub( in_pkt,  iface->ip_addr );
     }
-    else if( strcmp( MAC2Colon(macC), in_pkt->data.header.dst ) == 0 ){
+    else if( strcmp( MAC2Colon(macC), MAC2Colon(in_pkt->data.header.dst) ) == 0 ){
         OSPFStub( in_pkt,  iface->ip_addr );
     }
     else
-        return;
+        return;*/
 }
 
 /*

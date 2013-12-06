@@ -24,7 +24,7 @@ void dijkstraInit( LSA_Packet *lst, int tableSize ){
     numOfRouters = tableSize;
     lstable = (LSA_Packet *)malloc( tableSize * sizeof(LSA_Packet));
     memcpy(lstable, lst, tableSize * sizeof(LSA_Packet));
-    printLSUD();
+    //printLSUD();
     createGraph();
     dijkstra();
     printRT();
@@ -124,9 +124,12 @@ void printRT(){
     printf("------------------------------------------\n");
     for( i = 1; i < N; i++ ){
         printf("%s", IP2Dot( tmpbuf, IDList[i] ) );
-        printf("           %d", D[i]);
+        if( D[i] != 10000)
+                printf("           %d", D[i]);
+        else
+            printf("  Unreachable", D[i]);
         if( parent[i] == 0 )
-            printf("             SELF\n");
+            printf("        0.0.0.0\n");
         else
             printf("        %s\n", IP2Dot( tmpbuf2, IDList[parent[i]] ));
     }

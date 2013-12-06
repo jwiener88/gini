@@ -23,6 +23,7 @@
 #include <netinet/in.h>
 #include "routetable.h"
 #include "ospf.h"
+#include <time.h>   
 
 extern route_entry_t route_tbl[MAX_ROUTES];
 
@@ -743,6 +744,46 @@ int GNETInit(int *ghandler, char *config_dir, char *rname, simplequeue_t *sq)
 
 }
 
+int pktCnt;
+
+void throughputCalc(){
+    pthread_t threadTimer;
+    int thread_stat = pthread_create(&(threadTimer), NULL, (void *) tcalc, (void *) NULL);
+}
+
+void *tcalc(){
+    printf("Calculating throughput...\n");
+    clock_t t;
+    int i, calcCnt = 0;
+    double throughput[10];
+    while(1){
+        pktCnt = 0;
+        //t = clock();
+        sleep(2);
+        int cnt = pktCnt;
+        //t = clock() - t;
+        double tme = ((double)t) / CLOCKS_PER_SEC;
+        throughput[calcCnt++] = ((double)cnt) / 2.0;
+        printf("Throughput %d: %lf  %lf\n", calcCnt, throughput[calcCnt - 1], tme);
+        if( calcCnt == 10 ){
+            //calc average
+            double avg = 0;
+            for( i = 0; i < 10; i++ ) 
+                avg += throughput[i];
+            
+            avg /= (double)10;
+            //calc standard deviation
+            double sd = 0;
+            for( i = 0; i < 10; i++ )
+                sd += (throughput[i] - avg) * (throughput[i] - avg);
+            
+            sd = sqrt(sd);
+            printf("Throughput: %lf\n Standard Deviation: %lf\n\n", avg, sd );
+            break;
+        }        
+    }
+}
+
 void *GNETHandler(void *outq)
 {
 	char tmpbuf[MAX_NAME_LEN];
@@ -750,8 +791,10 @@ void *GNETHandler(void *outq)
 	uchar mac_addr[6];
 	simplequeue_t *outputQ = (simplequeue_t *)outq;
 	gpacket_t *in_pkt;
-	int inbytes, cached;
-
+	int inbytes, cached, thread_stat;
+        pktCnt = 0;
+        //pthread_t threadTimer;
+        //thread_stat = pthread_create(&(threadTimer), NULL, (void *) throughputCalc, (void *) NULL);
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);       // die as soon as cancelled
 	while (1)
 	{
@@ -797,6 +840,7 @@ void *GNETHandler(void *outq)
                         //}
                     }
                 }
+                pktCnt++;
 		iface->devdriver->todev((void *)in_pkt);
 
 	}

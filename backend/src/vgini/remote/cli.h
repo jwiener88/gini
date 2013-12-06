@@ -31,11 +31,13 @@
 #define USAGE_SHOWNM                  "AA"
 #define USAGE_QUIT                    "AA"
 
+
 #define LHELP_SETIP                   "AA"
 #define LHELP_SETNM                   "AA"
 #define LHELP_SHOWIP                  "AA"
 #define LHELP_SHOWNM                  "AA"
 #define LHELP_QUIT                    "AA"
+#define LHELP_THROUGHPUT              "AA"
 
 #define MAX_TMPBUF_LEN                256
 #define HELP_PREAMPLE                 "These shell commands are defined internally. Type `help' to see \n\
@@ -75,6 +77,7 @@ void setipCmd();
 void setnmCmd();
 void showipCmd();
 void shownmCmd();
+void throughputCmd();
 
 char buf_interface[256];
 char buf_ipfo[256];

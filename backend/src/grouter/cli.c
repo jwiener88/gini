@@ -53,6 +53,7 @@ extern pktcore_t *pcore;
  * The CLI registers and commands into a hash table and forks a thread to
  * handle the command line.
  */
+void throughputCmd();
 int CLIInit(router_config *rarg)
 {
 
@@ -91,6 +92,9 @@ int CLIInit(router_config *rarg)
 	registerCLI("spolicy", spolicyCmd, SHELP_SPOLICY, USAGE_SPOLICY, LHELP_SPOLICY); // Check
 	registerCLI("class", classCmd, SHELP_CLASS, USAGE_CLASS, LHELP_CLASS);
 	registerCLI("filter", filterCmd, SHELP_FILTER, USAGE_FILTER, LHELP_FILTER);
+        registerCLI("throughput", throughputCmd, SHELP_THROUGHPUT, USAGE_THROUGHPUT, LHELP_THROUGHPUT);
+        
+        
 
 
 	if (rarg->config_dir != NULL)
@@ -123,7 +127,7 @@ void *CLIProcessCmdsInteractive(void *arg)
 {
 	FILE *fp = (FILE *)arg;
 	CLIPrintHelpPreamble();
-        OSPFinit();
+        //OSPFinit();
         CLIProcessCmds(fp, 1);
 }
 
@@ -793,6 +797,9 @@ void filterCmd()
 	}
 }
 
+void throughputCmd(){
+    throughputCalc();
+}
 
 
 /*
@@ -1161,5 +1168,3 @@ void spolicyCmd()
 	if (!strcmp(next_tok, "show"))
 		printf("Scheduling policy: rr (round robin)\n");
 }
-
-
