@@ -367,6 +367,7 @@ void *packetProcessor(void *pc)
 			// TODO: should we generate ICMP errors here.. check router RFCs
 			break;
 		}
+                printf("Throughput: %lf\n", getAvgByteRate(pcore->workQ));
 	}
 }
 
