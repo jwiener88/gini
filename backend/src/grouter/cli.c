@@ -798,6 +798,7 @@ void filterCmd()
 }
 
 void throughputCmd(){
+    printf("Throughput Yo!\n");
     throughputCalc();
 }
 
