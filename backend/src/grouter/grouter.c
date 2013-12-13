@@ -76,10 +76,12 @@ int main(int ac, char *av[])
 	filter = createFilter(classifier, 0);
 
 	pcore = createPacketCore(rconfig.router_name, outputQ, workQ);
-
-	// add a default Queue.. the createClassifier has already added a rule with "default" tag
+        // add a default Queue.. the createClassifier has already added a rule with "default" tag
 	// char *qname, char *dqisc, double qweight, double delay_us, int nslots);
 	addPktCoreQueue(pcore, "default", "taildrop", 1.0, 2.0, 0);
+        // adding queues for hping2 and iperf
+        addPktCoreQueue(pcore, "hping2", "taildrop", 1.0, 2.0, 0);
+        addPktCoreQueue(pcore, "iperf", "taildrop", 1.0, 2.0, 0);
 	rconfig.scheduler = PktCoreSchedulerInit(pcore);
 	rconfig.worker = PktCoreWorkerInit(pcore);
 

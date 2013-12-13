@@ -311,7 +311,8 @@ pthread_t PktCoreSchedulerInit(pktcore_t *pcore)
 	int threadstat;
 	pthread_t threadid;
 
-	threadstat = pthread_create((pthread_t *)&threadid, NULL, (void *)roundRobinScheduler, (void *)pcore);
+	//threadstat = pthread_create((pthread_t *)&threadid, NULL, (void *)roundRobinScheduler, (void *)pcore);
+        threadstat = pthread_create((pthread_t *)&threadid, NULL, (void *)weightedFairScheduler, (void *)pcore);
 	if (threadstat != 0)
 	{
 		verbose(1, "[PKTCoreSchedulerInit]:: unable to create thread.. ");
@@ -423,7 +424,28 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
 	 * we get the "default" tag!
 	 */
 	qkey = tagPacket(pcore, in_pkt);
-
+        
+        ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
+        if( !strcmp(qkey, "default" ) && ip_pkt->ip_prot == TCP_PROTOCOL ){
+            int iphdrlen = ip_pkt->ip_hdr_len * 4;
+            uint16_t *hl1 = (uint16_t *)((uchar *)ip_pkt + iphdrlen);
+            uint16_t *hl2 = (uint16_t *)((uchar *)hl1 + sizeof(uint16_t));
+            int sport = ntohs(*hl1);
+            int dport = ntohs(*hl2);
+            static char *hps = "hping2";
+            static char *ipf = "iperf";
+            if( sport == 0 || dport == 0 ){
+                //hping2
+                qkey = hps;
+            }
+            else if( sport == 5001 || dport == 5001 ){
+                //iperf
+                qkey = ipf;
+            }
+            //printf("Ports: %u %u\n", ntohs(*hl1), ntohs(*hl2));
+            //printf("Qkey is: %s\n", qkey);
+        }
+        
 	verbose(2, "[enqueuePacket]:: simple packet queuer ..");
 	if (prog_verbosity_level() >= 3)
 		printGPacket(in_pkt, 6, "QUEUER");

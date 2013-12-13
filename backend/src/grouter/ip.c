@@ -56,8 +56,8 @@ void IPIncomingPacket(gpacket_t *in_pkt)
         //printf("Protocol of received IP packet: %d\n", ip_pkt->ip_prot);
 //        printf("IPINCOMING Received from: %s\n", IP2Dot(tmpbuf, gNtohl(tmpbuf, ip_pkt->ip_src)));
 //        printf("IPINCOMING Was addressed to: %s\n", IP2Dot(tmpbuf, gNtohl(tmpbuf, ip_pkt->ip_dst)));
-//        
-	if (IPCheckPacket4Me(in_pkt))
+        
+        if (IPCheckPacket4Me(in_pkt))
 	{
 		verbose(2, "[IPIncomingPacket]:: got IP packet destined to this router");
 		IPProcessMyPacket(in_pkt);
