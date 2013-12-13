@@ -211,26 +211,6 @@
           </df>
         </df>
       </df>
-      <df name="bin">
-      </df>
-      <df name="build">
-        <df name="release">
-          <df name="grouter">
-          </df>
-          <df name="uswitch">
-          </df>
-          <df name="vgini">
-            <df name="local">
-            </df>
-            <df name="remote">
-            </df>
-          </df>
-          <df name="wgini">
-          </df>
-        </df>
-      </df>
-      <df name="doc">
-      </df>
       <df name="frontend">
         <df name="bin">
         </df>
@@ -251,48 +231,6 @@
           </df>
         </df>
       </df>
-      <df name="lib">
-        <df name="gini">
-          <df name="gbuilder">
-            <df name="Core">
-            </df>
-            <df name="Devices">
-            </df>
-            <df name="Network">
-            </df>
-            <df name="UI">
-            </df>
-          </df>
-          <df name="gloader">
-          </df>
-          <df name="grouter">
-          </df>
-          <df name="kernel">
-          </df>
-          <df name="uswitch">
-          </df>
-          <df name="vgini">
-          </df>
-          <df name="wgini">
-          </df>
-        </df>
-      </df>
-      <df name="share">
-        <df name="gini">
-          <df name="filesystem">
-          </df>
-          <df name="gbuilder">
-            <df name="images">
-            </df>
-          </df>
-          <df name="gloader">
-          </df>
-          <df name="grouter">
-            <df name="helpdefs">
-            </df>
-          </df>
-        </df>
-      </df>
     </df>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -300,7 +238,7 @@
     <conf name="Default" type="0">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
-        <platform>3</platform>
+        <platform>2</platform>
       </toolsSet>
       <compile>
         <compiledirpicklist>
