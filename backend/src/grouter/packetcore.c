@@ -368,7 +368,7 @@ void *packetProcessor(void *pc)
 			// TODO: should we generate ICMP errors here.. check router RFCs
 			break;
 		}
-                //printf("Throughput: %lf\n", getAvgByteRate(pcore->workQ));
+                printf("Throughput: %lf\n", getAvgByteRate(pcore->workQ));
 	}
 }
 
@@ -451,10 +451,13 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
                 qkey = dft;*/
             //printf("Ports: %u %u\n", ntohs(*hl1), ntohs(*hl2));
         }
-        printf("Qkey is: %s\n", qkey);
+        //printf("Qkey is: %s\n", qkey);
         
         return weightedFairQueuer( pcore, in_pkt, pktsize, qkey );
-	
+	//To run ROUND ROBIN SCHED uncomment the code below
+        //and change the line in PktCoreSchedulerInit to run Round Robin
+        
+        
         /*verbose(2, "[enqueuePacket]:: simple packet queuer ..");
 	if (prog_verbosity_level() >= 3)
 		printGPacket(in_pkt, 6, "QUEUER");
