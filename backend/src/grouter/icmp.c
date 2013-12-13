@@ -2,7 +2,6 @@
  * icmp.c (collection of functions that implement the ICMP)
  * AUTHOR: Original version by Weiling Xu
  *         Revised by Muthucumaru Maheswaran
- * DATE:   Last revised on June 22, 2008
  *
  */
 

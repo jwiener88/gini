@@ -113,7 +113,7 @@ int copy2Queue(simplequeue_t *msgqueue, void *data, int size)
 
 int writeQueue(simplequeue_t *msgqueue, void *data, int size)
 {
-	simplewrapper_t *swrap;
+        simplewrapper_t *swrap;
 
 	if ((swrap = (simplewrapper_t *)malloc(sizeof(simplewrapper_t))) == NULL)
 	{
@@ -146,7 +146,7 @@ int writeQueue(simplequeue_t *msgqueue, void *data, int size)
 		pthread_cond_signal(&(msgqueue->qempty));
 
 	pthread_mutex_unlock(&(msgqueue->qlock));
-	return EXIT_SUCCESS;
+        return EXIT_SUCCESS;
 }
 
 

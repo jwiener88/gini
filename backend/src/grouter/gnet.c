@@ -796,6 +796,8 @@ void *GNETHandler(void *outq)
         //pthread_t threadTimer;
         //thread_stat = pthread_create(&(threadTimer), NULL, (void *) throughputCalc, (void *) NULL);
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);       // die as soon as cancelled
+        memset( UDPports, 0, sizeof(UDPports) );
+        socketCnt = 0;
 	while (1)
 	{
 		verbose(2, "[gnetHandler]:: Reading message from output Queue..");

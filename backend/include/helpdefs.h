@@ -21,6 +21,7 @@
 #define USAGE_CLASS		    "class cname [-src ip_spec [<min_port--max_port>]] [-dst ip_spec [<min_port--max_port>]] [-prot num] [-tos tos_spec]"
 #define USAGE_FILTER     	"filter action [action specific options]"
 #define USAGE_THROUGHPUT              "Throughput action"
+#define USAGE_UDP              "UDP action"
 
 #define SHELP_HELP          "display help information on given command"
 #define SHELP_VERSION       "get router version number"
@@ -40,6 +41,7 @@
 #define SHELP_CLASS		    "create add, del, and view classifier information"
 #define SHELP_FILTER		"create add, del, and view filtering rules; this uses class rules to group packets"
 #define SHELP_THROUGHPUT        "..."
+#define SHELP_UDP        "send udp packet"
 
 /*
  * TODO: The long help descriptions should be revised with examples
@@ -77,4 +79,6 @@ absolute path (e.g., /sbin/ifconfig). \n"
 #define LHELP_CLASS			"class.hlp"
 #define LHELP_FILTER		"filter.hlp"
 #define LHELP_THROUGHPUT       "something"
+#define LHELP_UDP              "something"
+
 #endif

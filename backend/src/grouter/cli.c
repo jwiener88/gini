@@ -35,6 +35,7 @@
 #include <readline/history.h>
 #include "ospf.h"
 
+
 Map *cli_map;
 Mapper *cli_mapper;
 static char *cur_line = (char *)NULL;       // static variable for holding the line
@@ -54,6 +55,8 @@ extern pktcore_t *pcore;
  * handle the command line.
  */
 void throughputCmd();
+void udpCmd();
+
 int CLIInit(router_config *rarg)
 {
 
@@ -93,8 +96,7 @@ int CLIInit(router_config *rarg)
 	registerCLI("class", classCmd, SHELP_CLASS, USAGE_CLASS, LHELP_CLASS);
 	registerCLI("filter", filterCmd, SHELP_FILTER, USAGE_FILTER, LHELP_FILTER);
         registerCLI("throughput", throughputCmd, SHELP_THROUGHPUT, USAGE_THROUGHPUT, LHELP_THROUGHPUT);
-        
-        
+                
 
 
 	if (rarg->config_dir != NULL)

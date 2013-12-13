@@ -89,4 +89,5 @@ typedef struct _pingstat_t
 void ICMPSendPingPacket(uchar *dst_ip, int size, int seq);
 void ICMPProcessEchoRequest(gpacket_t *in_pkt);
 void ICMPProcessEchoReply(gpacket_t *in_pkt);
+void ICMPErrorMessage(gpacket_t *in_pkt);
 #endif

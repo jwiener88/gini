@@ -19,6 +19,7 @@
 #include <string.h>
 #include "ospf.h"
 
+
 route_entry_t route_tbl[MAX_ROUTES];       	// routing table
 mtu_entry_t MTU_tbl[MAX_MTU];		        // MTU table
 
@@ -332,24 +333,14 @@ int IPProcessMyPacket(gpacket_t *in_pkt)
 		// Is packet UDP/TCP (only UDP implemented now)
 		// May be we can deal with other connectionless protocols as well.
 		if (ip_pkt->ip_prot == UDP_PROTOCOL){
-			UDPProcess(in_pkt);
-		  return EXIT_SUCCESS;
+                    verbose(2, "[UDPProcess]:: packet received for processing by UDP");
+                    //UDPProcess(in_pkt);//function in udp.c file
+		    return EXIT_SUCCESS;
                 }
                 
 
 	}
 	return EXIT_FAILURE;
-}
-
-
-/*
- * TODO: implement UDP processing routines..
- * this is necessary for implementing some routing protocols.
- */
-int UDPProcess(gpacket_t *in_pkt)
-{
-	verbose(2, "[UDPProcess]:: packet received for processing.. NOT YET IMPLEMENTED!! ");
-	return EXIT_SUCCESS;
 }
 
 extern uint16_t LSTableSize;
@@ -408,9 +399,10 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
 		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
 		// lookup the IP address of the destination interface..
 		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
-					      iface_ip_addr)) == EXIT_FAILURE)
+					      iface_ip_addr)) == EXIT_FAILURE){
 					      return EXIT_FAILURE;
-		// the outgoing packet should have the interface IP as source
+                }
+                // the outgoing packet should have the interface IP as source
 		COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, iface_ip_addr));
 		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
 	}
@@ -452,22 +444,34 @@ int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int s
                 pkt->frame.arp_valid = FALSE;
                 pkt->frame.arp_bcast = TRUE;
                 
-                //////
-                /*LSA_Packet *lsp = ospfpt->data;
-                int i, j;
-                if(ospfpt->type == LSU ){
-                    char tmpbuf2[MAX_TMPBUF_LEN];
-                    for( i = 0; i < LSTableSize; i++, lsp++ ){
-                        ospf_LSU *lsu = lsp->data;
-                        lnk *LList = lsu->links;
-                        printf("IP.c BEFORE SENDING Link State ID: %s Number of Links: %d\n", IP2Dot(tmpbuf, lsp->advertRouterIp), lsu->numOfLinks );
-                        for( j = 0; j < lsu->numOfLinks; j++, LList++ ){
-                            printf("Edge between %s and %s\n", IP2Dot(tmpbuf, &(LList->linkID)), IP2Dot(tmpbuf2, &(LList->linkData)));
-                        }
-                        printf("\n");
-                    }
-                }*/
-                ////
+        }
+        else if( newflag == 3 ){//UDP Packet
+            // non REPLY PACKET -- this is a new packet; set all fields
+		ip_pkt->ip_version = 4;
+		ip_pkt->ip_hdr_len = 5;
+		ip_pkt->ip_tos = 0;
+		ip_pkt->ip_identifier = IP_OFFMASK & random();
+		RESET_DF_BITS(ip_pkt->ip_frag_off);
+		RESET_MF_BITS(ip_pkt->ip_frag_off);
+		ip_pkt->ip_frag_off = 0;
+                COPY_IP(ip_pkt->ip_dst, gHtonl(tmpbuf, dst_ip));
+		ip_pkt->ip_pkt_len = htons(size + ip_pkt->ip_hdr_len * 4);
+
+		verbose(2, "[IPOutgoingPacket]:: lookup next hop ");
+		// find the nexthop and interface and fill them in the "meta" frame
+		// NOTE: the packet itself is not modified by this lookup!
+		if (findRouteEntry(route_tbl, gNtohl(tmpbuf, ip_pkt->ip_dst),
+				   pkt->frame.nxth_ip_addr, &(pkt->frame.dst_interface)) == EXIT_FAILURE)
+				   return EXIT_FAILURE;
+
+		verbose(2, "[IPOutgoingPacket]:: lookup MTU of nexthop");
+		// lookup the IP address of the destination interface..
+		if ((status = findInterfaceIP(MTU_tbl, pkt->frame.dst_interface,
+					      iface_ip_addr)) == EXIT_FAILURE)
+					      return EXIT_FAILURE;
+		// the outgoing packet should have the interface IP as source
+		COPY_IP(ip_pkt->ip_src, gHtonl(tmpbuf, iface_ip_addr));
+		verbose(2, "[IPOutgoingPacket]:: almost one processing the IP header.");
         }
         else
 	{
@@ -502,8 +506,7 @@ int IPSend2Output(gpacket_t *pkt)
 	vlevel = prog_verbosity_level();
 	if (vlevel >= 3)
 		printGPacket(pkt, vlevel, "IP_ROUTINE");
-
-	return writeQueue(pcore->outputQ, (void *)pkt, sizeof(gpacket_t));
+        return writeQueue(pcore->outputQ, (void *)pkt, sizeof(gpacket_t));
 }
 
 
@@ -575,3 +578,6 @@ int isInSameNetwork(uchar *ip_addr1, uchar *ip_addr2)
 	return EXIT_FAILURE;
 }
 
+void UDPProcess(){
+
+}

@@ -5,6 +5,7 @@
       <df name="backend">
         <df name="include">
           <in>dijkstra.h</in>
+          <in>udp.h</in>
         </df>
         <df name="src">
           <df name="grouter">
@@ -116,6 +117,8 @@
         </makeTool>
       </makefileType>
       <item path="backend/include/dijkstra.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="backend/include/udp.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="backend/src/grouter/arp.c" ex="false" tool="0" flavor2="2">
         <cTool>

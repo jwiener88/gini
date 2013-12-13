@@ -37,7 +37,7 @@
 #define LHELP_SHOWIP                  "AA"
 #define LHELP_SHOWNM                  "AA"
 #define LHELP_QUIT                    "AA"
-#define LHELP_THROUGHPUT              "AA"
+
 
 #define MAX_TMPBUF_LEN                256
 #define HELP_PREAMPLE                 "These shell commands are defined internally. Type `help' to see \n\

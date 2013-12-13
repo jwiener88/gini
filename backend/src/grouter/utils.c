@@ -156,19 +156,16 @@ ushort checksum(uchar *buf, int iwords)
 {
 	unsigned long cksum = 0;
 	int i;
-
-	for(i = 0; i < iwords; i++)
+        for(i = 0; i < iwords; i++)
 	{
 		cksum += buf[0] << 8;
 		cksum += buf[1];
 		buf += 2;
 	}
-
-	// add in all carries
+        // add in all carries
 	while (cksum >> 16)
 		cksum = (cksum & 0xFFFF) + (cksum >> 16);
-
-	verbose(2, "[checksum]:: computed %x ..", ~cksum);
+        verbose(2, "[checksum]:: computed %x ..", ~cksum);
 
 	return (unsigned short) (~cksum);
 }

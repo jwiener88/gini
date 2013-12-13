@@ -69,7 +69,7 @@ typedef struct _vplinfo_t
 
 
 
-
+int UDPports[10000], socketCnt;
 // function prototype go here...
 interface_t *GNETMakeEthInterface(char *vsock_name, char *device,
 			   uchar *mac_addr, uchar *nw_addr, int iface_mtu, int cforce);

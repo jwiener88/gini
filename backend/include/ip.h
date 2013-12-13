@@ -67,7 +67,6 @@ int IPCheck4Errors(gpacket_t *in_pkt);
 int IPCheck4Fragmentation(gpacket_t *in_pkt);
 int IPCheck4Redirection(gpacket_t *in_pkt);
 int IPProcessMyPacket(gpacket_t *in_pkt);
-int UDPProcess(gpacket_t *in_pkt);
 int IPOutgoingPacket(gpacket_t *pkt, uchar *dst_ip, int size, int newflag, int src_prot);
 int send2Output(gpacket_t *pkt);
 int IPVerifyPacket(ip_packet_t *ip_pkt);

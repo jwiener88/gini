@@ -73,6 +73,7 @@
           <in>simplequeue.h</in>
           <in>tap.h</in>
           <in>tapio.h</in>
+          <in>udp.h</in>
           <in>vpl.h</in>
         </df>
         <df name="kernel">
