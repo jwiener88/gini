@@ -368,7 +368,7 @@ void *packetProcessor(void *pc)
 			// TODO: should we generate ICMP errors here.. check router RFCs
 			break;
 		}
-                printf("Throughput: %lf\n", getAvgByteRate(pcore->workQ));
+                //printf("Throughput: %lf\n", getAvgByteRate(pcore->workQ));
 	}
 }
 
@@ -424,10 +424,13 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
 	 * invoke the packet classifier to get the packet tag at the very minimum,
 	 * we get the "default" tag!
 	 */
+        //is essential, understand better to understand problem
 	qkey = tagPacket(pcore, in_pkt);
-        
+        //Remove code below and create port comparison function
         ip_packet_t *ip_pkt = (ip_packet_t *)&in_pkt->data.data;
-        if( !strcmp(qkey, "default" ) && ip_pkt->ip_prot == TCP_PROTOCOL ){
+        int protocol = ip_pkt->ip_prot;
+        //printf("Protocol : %d\n", protocol);
+        if( protocol == TCP_PROTOCOL ){
             int iphdrlen = ip_pkt->ip_hdr_len * 4;
             uint16_t *hl1 = (uint16_t *)((uchar *)ip_pkt + iphdrlen);
             uint16_t *hl2 = (uint16_t *)((uchar *)hl1 + sizeof(uint16_t));
@@ -435,6 +438,7 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
             int dport = ntohs(*hl2);
             static char *hps = "hping2";
             static char *ipf = "iperf";
+            static char *dft = "default";
             if( sport == 0 || dport == 0 ){
                 //hping2
                 qkey = hps;
@@ -443,17 +447,22 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
                 //iperf
                 qkey = ipf;
             }
+            /*else
+                qkey = dft;*/
             //printf("Ports: %u %u\n", ntohs(*hl1), ntohs(*hl2));
-            //printf("Qkey is: %s\n", qkey);
         }
+        printf("Qkey is: %s\n", qkey);
         
-	verbose(2, "[enqueuePacket]:: simple packet queuer ..");
+        return weightedFairQueuer( pcore, in_pkt, pktsize, qkey );
+	
+        /*verbose(2, "[enqueuePacket]:: simple packet queuer ..");
 	if (prog_verbosity_level() >= 3)
 		printGPacket(in_pkt, 6, "QUEUER");
 
 	pthread_mutex_lock(&(pcore->qlock));
-
-	thisq = map_get(pcore->queues, qkey);
+        
+        thisq = map_get(pcore->queues, qkey);
+        
 	if (thisq == NULL)
 	{
 		fatal("[enqueuePacket]:: Invalid %s key presented for queue retrieval", qkey);
@@ -488,7 +497,8 @@ int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize) //add protot
 	if( writeQueue(thisq, in_pkt, pktsize) == EXIT_SUCCESS ){
             //Printf("SUCCESSFULLY Written to Queue.\n");
         }
-	return EXIT_SUCCESS;
+        */   
+	//return EXIT_SUCCESS;
 }
 
 

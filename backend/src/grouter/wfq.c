@@ -29,6 +29,11 @@ void *weightedFairScheduler(void *pc)
 	gpacket_t *in_pkt, *nxt_pkt;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);       // die as soon as cancelled
+        //MOD
+        pcore->vclock = 0.0;
+        //pktsize - used to get the packet size of packet being enqueued now
+        //npktsize - used to determine if there are more packets in current queue
+        //
 	while (1)
 	{
 		verbose(2, "[weightedFairScheduler]:: Worst-case weighted fair queuing scheduler processing..");
@@ -41,17 +46,20 @@ void *weightedFairScheduler(void *pc)
 		pthread_testcancel();
 
 		keylst = map_keys(pcore->queues);
+                minftime = MAX_DOUBLE;//MOD
+                savekey = NULL;//MOD
 		while (list_has_next(keylst) == 1)
 		{
 			nxtkey = list_next(keylst);
 			nxtq = map_get(pcore->queues, nxtkey);
 			if (nxtq->cursize == 0)
 				continue;
+                        //determines the minftime
 			if ((nxtq->stime <= pcore->vclock) && (nxtq->ftime < minftime))
 			{
 				savekey = nxtkey;
 				minftime = nxtq->ftime;
-			}
+                        }
 		}
 		list_release(keylst);
 
@@ -62,12 +70,14 @@ void *weightedFairScheduler(void *pc)
 		{
 			thisq = map_get(pcore->queues, savekey);
 			readQueue(thisq, (void **)&in_pkt, &pktsize);
-			writeQueue(pcore->workQ, in_pkt, pktsize);
+                        writeQueue(pcore->workQ, in_pkt, pktsize);
 			pthread_mutex_lock(&(pcore->qlock));
 			pcore->packetcnt--;
 			pthread_mutex_unlock(&(pcore->qlock));
 
 			peekQueue(thisq, (void **)&nxt_pkt, &npktsize);
+                        //Doing this because we don't change the stime and
+                        //ftime unless a new packet comes into an empty queue
 			if (npktsize)
 			{
 				thisq->stime = thisq->ftime;
@@ -78,6 +88,7 @@ void *weightedFairScheduler(void *pc)
 			tweight = 0.0;
 		
 			keylst = map_keys(pcore->queues);
+                        //determine minstime
 			while (list_has_next(keylst) == 1)
 			{
 				nxtkey = list_next(keylst);
@@ -100,10 +111,12 @@ void *weightedFairScheduler(void *pc)
 // TODO: Debug this function...
 int weightedFairQueuer(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize, char *qkey)
 {
+        //printf("In the WFQ: queue name is %s \n", qkey);
+        //return 1;
 	simplequeue_t *thisq, *nxtq;
-	double minftime, minstime, tweight;
+	double minstime;//MOD
 	List *keylst;
-	char *nxtkey, *savekey;
+	char *nxtkey;//MOD
 
 	verbose(2, "[weightedFairQueuer]:: Worst-case weighted fair queuing scheduler processing..");
 
@@ -117,7 +130,7 @@ int weightedFairQueuer(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize, char *q
 		return EXIT_FAILURE;             // packet dropped..
 	}
 
-	printf("Checking the queue size \n");
+	//printf("Checking the queue size \n");
 	if (thisq->cursize == 0)
 	{
 		verbose(2, "[weightedFairQueuer]:: inserting the first element.. ");
@@ -125,7 +138,7 @@ int weightedFairQueuer(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize, char *q
 		thisq->ftime = thisq->stime + pktsize/thisq->weight;
 
 		minstime = thisq->stime;
-
+                                
 		keylst = map_keys(pcore->queues);
 		
 		while (list_has_next(keylst) == 1)
@@ -156,7 +169,15 @@ int weightedFairQueuer(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize, char *q
 		pcore->packetcnt++;
 		pthread_mutex_unlock(&(pcore->qlock));
 		return EXIT_SUCCESS;
-	} else {
+	}
+        else if ( (!strcmp(thisq->qdisc, "red")) && (redDiscard(thisq, in_pkt)) )
+	{
+		verbose(2, "[enqueuePacket]:: RED Discarded Packet .. ");
+		free(in_pkt);
+		pthread_mutex_unlock(&(pcore->qlock));
+		return EXIT_FAILURE;
+	}
+        else {
 		verbose(2, "[weightedFairQueuer]:: Packet dropped.. Queue for %s is full ", qkey);
 		pthread_mutex_unlock(&(pcore->qlock));
 		return EXIT_SUCCESS;
