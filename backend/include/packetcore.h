@@ -61,7 +61,7 @@ int delPktCoreQueue(pktcore_t *pcore, char *qname);
 pthread_t PktCoreSchedulerInit(pktcore_t *pcore);
 int PktCoreWorkerInit(pktcore_t *pcore);
 void *packetProcessor(void *pc);
-
+int enqueuePacket(pktcore_t *pcore, gpacket_t *in_pkt, int pktsize);
 
 // Function prototypes from roundrobin.c and wfq.c??
 void *weightedFairScheduler(void *pc);
